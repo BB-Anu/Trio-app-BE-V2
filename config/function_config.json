@@ -1,0 +1,24 @@
+{
+    "functions": [
+        "user_create",
+        "user_update",
+        "clientprofile-create",
+        "clientprofile-update",
+        "documentgroup-create",
+        "documentgroup-update",
+        "customdocumententity-create",
+        "customdocumententity-update",
+        "tasktemplate-create",
+        "tasktemplate-update",
+        "triogroup-create",
+        "triogroup-update",
+        "loancase-create",
+        "loancase-update",
+        "projects-create",
+        "projects-update",
+        "documenttype-create",
+        "documenttype-update",
+        "foldermaster-create",
+        "foldermaster-update"
+    ]
+}
