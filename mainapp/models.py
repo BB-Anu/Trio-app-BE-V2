@@ -165,8 +165,8 @@ class CaseAssignment(models.Model):
 	case = models.ForeignKey(LoanCase, on_delete=models.CASCADE)
 	user = models.ForeignKey('user_management.User', on_delete=models.CASCADE)
 	assigned_to = models.ManyToManyField('UserProfile', blank=True)
-	role = models.CharField(max_length=250,)
-	assigned_at = models.DateTimeField(auto_now=True)
+	# role = models.CharField(max_length=250,)
+	assigned_at = models.DateField(auto_now=True)
 	due_date = models.DateField()
 	status = models.CharField(max_length=250,choices=[ ('pending', 'pending'), ('Completed', 'Completed')],default='pending')
 	def __str__(self):
@@ -236,7 +236,8 @@ class DocumentGroup(models.Model):
 class DocumentType(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
 	type = models.CharField(max_length=255,unique=False ,)
-	group= models.ForeignKey(DocumentGroup, on_delete=models.CASCADE, related_name='%(class)s_group')
+	description = models.CharField(max_length=255,unique=False ,)
+	# group= models.ForeignKey(DocumentGroup, on_delete=models.CASCADE, related_name='%(class)s_group')
 	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
 	created_at = models.DateTimeField(auto_now_add=True) 
 	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  

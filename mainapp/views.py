@@ -4,6 +4,7 @@ from django.views.generic import ListView, UpdateView, CreateView, DetailView
 from task.models import *
 from task.serializers import *
 from user_management.models import Role, User
+from user_management.serializers import UserSerializer
 from .models import *
 from .api_call import call_post_method_without_token_app_builder,call_get_method,call_get_method_without_token,call_post_with_method,call_post_method_for_without_token,call_delete_method,call_delete_method_without_token, call_put_method,call_put_method_without_token
 import requests
@@ -71,6 +72,8 @@ class ClientProfileListCreateView(APIView):
         # branch_id=user.branch.pk
         # records = ClientProfile.objects.filter(branch=branch_id)
         # user=User.objects.get(roles='auditor')
+        users=User.objects.filter(roles__name='customer')
+        print('---',users)
         records = ClientProfile.objects.all()
         serializer = ClientProfileSerializer(records, many=True)
         return Response(serializer.data)
@@ -2187,10 +2190,65 @@ class TemplateDocumentRetriveUpdateDestroyView(APIView):
 class AuditorUser(APIView):
     def get(self, request):
         try:
-            role = Role.objects.get(name='auditor')
-            users = User.objects.filter(roles=role)
-            records = AuditorProfile.objects.filter(user__in=users)
-            serializer = AuditorProfileSerializer(records, many=True)
+            users=User.objects.filter(roles__name='Auditor')
+            print('---',users)
+            serializer = UserSerializer(users, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+
+
+class ClientUser(APIView):
+    def get(self, request):
+        try:
+            users=User.objects.filter(roles__name='customer')
+            print('---',users)
+            serializer = UserSerializer(users, many=True)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class AgentUser(APIView):
+    def get(self, request):
+        try:
+            users=User.objects.filter(roles__name='Marketing Agent')
+            print('---',users)
+            serializer = UserSerializer(users, many=True)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class LawyerUser(APIView):
+    def get(self, request):
+        try:
+            users=User.objects.filter(roles__name='Lawyer')
+            print('---',users)
+            serializer = UserSerializer(users, many=True)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class entities(APIView):
+    def get(self, request):
+        try:
+            users=CustomDocumentEntity.objects.all()
+            serializer = CustomDocumentEntitySerializer(users, many=True)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+        
+
+class folder(APIView):
+    def get(self, request,entityId):
+    # Get folders associated with the given entity_id
+        try:
+            folders = FolderMaster.objects.filter(entity__entity_id=entityId)
+            print('---',folders)
+            serializer = FolderMasterSerializer(folders, many=True)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+                return Response({"error": str(e)}, status=500)
+        

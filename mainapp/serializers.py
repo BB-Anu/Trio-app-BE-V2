@@ -136,6 +136,8 @@ class DocumentUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentUpload
         fields = "__all__"
+    
+
 
 class DocumentUploadAudit1Serializer(serializers.ModelSerializer):
     class Meta:
@@ -177,17 +179,48 @@ class CaseAssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = CaseAssignment
         fields = "__all__"
-
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+      
+        try:
+            profile_names = [p.user.first_name for p in instance.assigned_to.all() if p.user]
+            rep["assigned_to"] = ", ".join(profile_names)
+    
+        except AttributeError:
+            rep["assigned_to"] = None
+        return rep    
 class TRIOGroupMemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = TRIOGroupMember
         fields = "__all__"
-
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        try:
+            rep["group"] = instance.group.name
+        except AttributeError:
+            rep["group"] = None
+        try:
+            profile_names = [p.user.first_name for p in instance.profile.all() if p.user]
+            rep["profile"] = ", ".join(profile_names)
+    
+        except AttributeError:
+            rep["profile"] = None
+        return rep    
+    
 class TRIOProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = TRIOProfile
         fields = "__all__"
-
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if instance.user.id and instance.user.user.first_name:
+            rep["user"] = {
+                'id': str(instance.user.user.id),
+                'name': instance.user.user.first_name
+            }
+        else:
+            rep["user"] = None
+        return rep
 class FinalReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = FinalReport
