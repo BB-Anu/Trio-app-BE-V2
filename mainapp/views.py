@@ -1,5 +1,6 @@
 from django.shortcuts import render,redirect,get_object_or_404
 from django.views.generic import ListView, UpdateView, CreateView, DetailView
+from django.db.models import Q
 
 from task.models import *
 from task.serializers import *
@@ -67,14 +68,15 @@ class SetupView(APIView):
 class ClientProfileListCreateView(APIView):
     # permission_classes = [IsAuthenticated] 
     def get(self, request):
-        print('===request.user===',request.user)
+        print('===request.user===',request.user.branch.id)
         # user=User.objects.get(email=request.user)
         # branch_id=user.branch.pk
         # records = ClientProfile.objects.filter(branch=branch_id)
         # user=User.objects.get(roles='auditor')
-        users=User.objects.filter(roles__name='customer')
-        print('---',users)
-        records = ClientProfile.objects.all()
+        # users=User.objects.filter(roles__name='customer')
+        # print('---',users)
+        records = ClientProfile.objects.filter(branch=request.user.branch.id)
+        print('---',records)
         serializer = ClientProfileSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -111,6 +113,7 @@ class ClientProfileRetrieveUpdateDestroyView(APIView):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     def delete(self, request, pk):
+        print(pk)
         records = self.get_object(pk)
         if records:
             records.delete()
@@ -119,7 +122,7 @@ class ClientProfileRetrieveUpdateDestroyView(APIView):
 
 class DocumentGroupListCreateView(APIView):
     def get(self, request):
-        records = DocumentGroup.objects.all()
+        records = DocumentGroup.objects.filter(branch=request.user.branch.id)
         serializer = DocumentGroupSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -163,7 +166,7 @@ class DocumentGroupRetrieveUpdateDestroyView(APIView):
 
 class CustomDocumentEntityListCreateView(APIView):
     def get(self, request):
-        records = CustomDocumentEntity.objects.all()
+        records = CustomDocumentEntity.objects.filter(branch=request.user.branch.id)
         serializer = CustomDocumentEntitySerializer(records, many=True)
         return Response(serializer.data)
 
@@ -309,7 +312,7 @@ class TRIOGroupRetrieveUpdateDestroyView(APIView):
 
 class LoanCaseListCreateView(APIView):
     def get(self, request):
-        records = LoanCase.objects.all()
+        records = LoanCase.objects.filter(branch=request.user.branch.id)
         serializer = LoanCaseSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -354,7 +357,7 @@ class LoanCaseRetrieveUpdateDestroyView(APIView):
 
 class ProjectsListCreateView(APIView):
     def get(self, request):
-        records = Projects.objects.all()
+        records = Projects.objects.filter(branch=request.user.branch.id)
         serializer = ProjectsSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -398,7 +401,7 @@ class ProjectsRetrieveUpdateDestroyView(APIView):
 
 class DocumentTypeListCreateView(APIView):
     def get(self, request):
-        records = DocumentType.objects.all()
+        records = DocumentType.objects.filter(branch=request.user.branch.id)
         serializer = DocumentTypeSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -442,7 +445,7 @@ class DocumentTypeRetrieveUpdateDestroyView(APIView):
 
 class FolderMasterListCreateView(APIView):
     def get(self, request):
-        records = FolderMaster.objects.all()
+        records = FolderMaster.objects.filter(branch=request.user.branch.id)
         serializer = FolderMasterSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -487,7 +490,7 @@ class FolderMasterRetrieveUpdateDestroyView(APIView):
 
 class TRIOAssignmentListCreateView(APIView):
     def get(self, request):
-        records = TRIOAssignment.objects.all()
+        records = TRIOAssignment.objects.filter(branch=request.user.branch.id)
         serializer = TRIOAssignmentSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -531,7 +534,7 @@ class TRIOAssignmentRetrieveUpdateDestroyView(APIView):
 
 class AuditLogListCreateView(APIView):
     def get(self, request):
-        records = AuditLog.objects.all()
+        records = AuditLog.objects.filter(branch=request.user.branch.id)
         serializer = AuditLogSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -575,7 +578,7 @@ class AuditLogRetrieveUpdateDestroyView(APIView):
 
 class ComplianceChecklistListCreateView(APIView):
     def get(self, request):
-        records = ComplianceChecklist.objects.all()
+        records = ComplianceChecklist.objects.filter(branch=request.user.branch.id)
         serializer = ComplianceChecklistSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -619,7 +622,7 @@ class ComplianceChecklistRetrieveUpdateDestroyView(APIView):
 
 class DocumentListCreateView(APIView):
     def get(self, request):
-        records = Document.objects.all()
+        records = Document.objects.filter(branch=request.user.branch.id)
         serializer = DocumentSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -664,7 +667,7 @@ class DocumentRetrieveUpdateDestroyView(APIView):
 
 class RiskAssessmentListCreateView(APIView):
     def get(self, request):
-        records = RiskAssessment.objects.all()
+        records = RiskAssessment.objects.filter(branch=request.user.branch.id)
         serializer = RiskAssessmentSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -710,7 +713,7 @@ class RiskAssessmentRetrieveUpdateDestroyView(APIView):
 
 class ClientQueryListCreateView(APIView):
     def get(self, request):
-        records = ClientQuery.objects.all()
+        records = ClientQuery.objects.filter(branch=request.user.branch.id)
         serializer = ClientQuerySerializer(records, many=True)
         return Response(serializer.data)
 
@@ -754,7 +757,7 @@ class ClientQueryRetrieveUpdateDestroyView(APIView):
 
 class TimeSheetListCreateView(APIView):
     def get(self, request):
-        records = TimeSheet.objects.all()
+        records = TimeSheet.objects.filter(branch=request.user.branch.id)
         serializer = TimeSheetSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -799,7 +802,7 @@ class TimeSheetRetrieveUpdateDestroyView(APIView):
 
 class DocumentUploadListCreateView(APIView):
     def get(self, request):
-        records = DocumentUpload.objects.all()
+        records = DocumentUpload.objects.filter(branch=request.user.branch.id)
         serializer = DocumentUploadSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -844,7 +847,7 @@ class DocumentUploadRetrieveUpdateDestroyView(APIView):
 
 class DocumentUploadAudit1ListCreateView(APIView):
     def get(self, request):
-        records = DocumentUploadAudit1.objects.all()
+        records = DocumentUploadAudit1.objects.filter(branch=request.user.branch.id)
         serializer = DocumentUploadAudit1Serializer(records, many=True)
         return Response(serializer.data)
 
@@ -888,7 +891,7 @@ class DocumentUploadAudit1RetrieveUpdateDestroyView(APIView):
 
 class DocumentUploadHistory1ListCreateView(APIView):
     def get(self, request):
-        records = DocumentUploadHistory1.objects.all()
+        records = DocumentUploadHistory1.objects.filter(branch=request.user.branch.id)
         serializer = DocumentUploadHistory1Serializer(records, many=True)
         return Response(serializer.data)
 
@@ -933,7 +936,8 @@ class DocumentUploadHistory1RetrieveUpdateDestroyView(APIView):
 
 class UserProfileListCreateView(APIView):
     def get(self, request):
-        records = UserProfile.objects.all()
+        print('--',request.user)
+        records = UserProfile.objects.filter(branch=request.user.branch.id)
         serializer = UserProfileSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -942,6 +946,7 @@ class UserProfileListCreateView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        print(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserProfileRetrieveUpdateDestroyView(APIView):
@@ -978,7 +983,7 @@ class UserProfileRetrieveUpdateDestroyView(APIView):
 
 class DocumentAccessListCreateView(APIView):
     def get(self, request):
-        records = DocumentAccess.objects.all()
+        records = DocumentAccess.objects.filter(branch=request.user.branch.id)
         serializer = DocumentAccessSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1023,7 +1028,7 @@ class DocumentAccessRetrieveUpdateDestroyView(APIView):
 
 class FileDownloadReasonListCreateView(APIView):
     def get(self, request):
-        records = FileDownloadReason.objects.all()
+        records = FileDownloadReason.objects.filter(branch=request.user.branch.id)
         serializer = FileDownloadReasonSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1068,7 +1073,7 @@ class FileDownloadReasonRetrieveUpdateDestroyView(APIView):
 
 class CaseAssignmentListCreateView(APIView):
     def get(self, request):
-        records = CaseAssignment.objects.all()
+        records = CaseAssignment.objects.filter(branch=request.user.branch.id)
         serializer = CaseAssignmentSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1114,7 +1119,7 @@ class CaseAssignmentRetrieveUpdateDestroyView(APIView):
 class TRIOGroupMemberListCreateView(APIView):
     def get(self, request):
         
-        records = TRIOGroupMember.objects.all()
+        records = TRIOGroupMember.objects.filter(branch=request.user.branch.id)
         serializer = TRIOGroupMemberSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1158,7 +1163,8 @@ class TRIOGroupMemberRetrieveUpdateDestroyView(APIView):
 
 class TRIOProfileListCreateView(APIView):
     def get(self, request):
-        records = TRIOProfile.objects.all()
+        print(request.data)
+        records = TRIOProfile.objects.filter(branch=request.user.branch.id)
         serializer = TRIOProfileSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1167,6 +1173,7 @@ class TRIOProfileListCreateView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class TRIOProfileRetrieveUpdateDestroyView(APIView):
@@ -1202,7 +1209,7 @@ class TRIOProfileRetrieveUpdateDestroyView(APIView):
 
 class FinalReportListCreateView(APIView):
     def get(self, request):
-        records = FinalReport.objects.all()
+        records = FinalReport.objects.filter(branch=request.user.branch.id)
         serializer = FinalReportSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1246,7 +1253,7 @@ class FinalReportRetrieveUpdateDestroyView(APIView):
 
 class TaskListCreateView(APIView):
     def get(self, request):
-        records = Task.objects.all()
+        records = Task.objects.filter(branch=request.user.branch.id)
         serializer = TaskSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1290,7 +1297,7 @@ class TaskRetrieveUpdateDestroyView(APIView):
 
 class TaskAuditLogListCreateView(APIView):
     def get(self, request):
-        records = TaskAuditLog.objects.all()
+        records = TaskAuditLog.objects.filter(branch=request.user.branch.id)
         serializer = TaskAuditLogSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1334,7 +1341,7 @@ class TaskAuditLogRetrieveUpdateDestroyView(APIView):
 
 class TaskDeliverableListCreateView(APIView):
     def get(self, request):
-        records = TaskDeliverable.objects.all()
+        records = TaskDeliverable.objects.filter(branch=request.user.branch.id)
         serializer = TaskDeliverableSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1379,7 +1386,7 @@ class TaskDeliverableRetrieveUpdateDestroyView(APIView):
 
 class TaskTimesheetListCreateView(APIView):
     def get(self, request):
-        records = TaskTimesheet.objects.all()
+        records = TaskTimesheet.objects.filter(branch=request.user.branch.id)
         serializer = TaskTimesheetSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1423,7 +1430,7 @@ class TaskTimesheetRetrieveUpdateDestroyView(APIView):
 
 class TimesheetEntryListCreateView(APIView):
     def get(self, request):
-        records = TimesheetEntry.objects.all()
+        records = TimesheetEntry.objects.filter(branch=request.user.branch.id)
         serializer = TimesheetEntrySerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1467,7 +1474,7 @@ class TimesheetEntryRetrieveUpdateDestroyView(APIView):
 
 class TimesheetAttachmentListCreateView(APIView):
     def get(self, request):
-        records = TimesheetAttachment.objects.all()
+        records = TimesheetAttachment.objects.filter(branch=request.user.branch.id)
         serializer = TimesheetAttachmentSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1511,7 +1518,7 @@ class TimesheetAttachmentRetrieveUpdateDestroyView(APIView):
 
 class TimesheetDocumentListCreateView(APIView):
     def get(self, request):
-        records = TimesheetDocument.objects.all()
+        records = TimesheetDocument.objects.filter(branch=request.user.branch.id)
         serializer = TimesheetDocumentSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1555,7 +1562,7 @@ class TimesheetDocumentRetrieveUpdateDestroyView(APIView):
 
 class WorkScheduleListCreateView(APIView):
     def get(self, request):
-        records = WorkSchedule.objects.all()
+        records = WorkSchedule.objects.filter(branch=request.user.branch.id)
         serializer = WorkScheduleSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1599,7 +1606,7 @@ class WorkScheduleRetrieveUpdateDestroyView(APIView):
 
 class TaskExtraHoursRequestListCreateView(APIView):
     def get(self, request):
-        records = TaskExtraHoursRequest.objects.all()
+        records = TaskExtraHoursRequest.objects.filter(branch=request.user.branch.id)
         serializer = TaskExtraHoursRequestSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1643,7 +1650,7 @@ class TaskExtraHoursRequestRetrieveUpdateDestroyView(APIView):
 
 class MeetingsListCreateView(APIView):
     def get(self, request):
-        records = Meetings.objects.all()
+        records = Meetings.objects.filter(branch=request.user.branch.id)
         serializer = MeetingsSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1688,7 +1695,7 @@ class MeetingsRetrieveUpdateDestroyView(APIView):
 
 class AuditorProfileListCreateView(APIView):
     def get(self, request):
-        records = AuditorProfile.objects.all()
+        records = AuditorProfile.objects.filter(branch=request.user.branch.id)
         serializer = AuditorProfileSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1733,7 +1740,7 @@ class AuditorProfileRetrieveUpdateDestroyView(APIView):
 
 class MarketingAgentProfileListCreateView(APIView):
     def get(self, request):
-        records = MarketingAgentProfile.objects.all()
+        records = MarketingAgentProfile.objects.filter(branch=request.user.branch.id)
         serializer = MarketingAgentProfileSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1777,7 +1784,7 @@ class MarketingAgentProfileRetrieveUpdateDestroyView(APIView):
 
 class IssueReportListCreateView(APIView):
     def get(self, request):
-        records = IssueReport.objects.all()
+        records = IssueReport.objects.filter(branch=request.user.branch.id)
         serializer = IssueReportSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1822,7 +1829,7 @@ class IssueReportRetrieveUpdateDestroyView(APIView):
 
 class NotificationListCreateView(APIView):
     def get(self, request):
-        records = Notification.objects.all()
+        records = Notification.objects.filter(branch=request.user.branch.id)
         serializer = NotificationSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1866,7 +1873,7 @@ class NotificationRetrieveUpdateDestroyView(APIView):
 
 class LawyerProfileListCreateView(APIView):
     def get(self, request):
-        records = LawyerProfile.objects.all()
+        records = LawyerProfile.objects.filter(branch=request.user.branch.id)
         serializer = LawyerProfileSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1911,7 +1918,7 @@ class LawyerProfileRetrieveUpdateDestroyView(APIView):
 
 class MembersListCreateView(APIView):
     def get(self, request):
-        records = Members.objects.all()
+        records = Members.objects.filter(branch=request.user.branch.id)
         serializer = MembersSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -2004,7 +2011,7 @@ class EventsRetrieveUpdateDestroyView(APIView):
 
 class StaffFeedbackListCreateView(APIView):
     def get(self, request):
-        records = StaffFeedback.objects.all()
+        records = StaffFeedback.objects.filter(branch=request.user.branch.id)
         serializer = StaffFeedbackSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -2049,7 +2056,7 @@ class StaffFeedbackRetrieveUpdateDestroyView(APIView):
 
 class TaskAssignmentListCreateView(APIView):
     def get(self, request):
-        records = TaskAssignment.objects.all()
+        records = TaskAssignment.objects.filter(branch=request.user.branch.id)
         serializer = TaskAssignmentSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -2141,7 +2148,7 @@ class TemplateRetriveUpdateDestroyView(APIView):
 
 class TemplateDocumentListCreateView(APIView):
     def get(self, request):
-        records = TemplateDocument.objects.all()
+        records = TemplateDocument.objects.filter(branch=request.user.branch.id)
         serializer = TemplateDocumentSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -2190,7 +2197,7 @@ class TemplateDocumentRetriveUpdateDestroyView(APIView):
 class AuditorUser(APIView):
     def get(self, request):
         try:
-            users=User.objects.filter(roles__name='Auditor')
+            users=User.objects.filter(roles__name='Auditor',branch=request.user.branch.id)
             print('---',users)
             serializer = UserSerializer(users, many=True)
             return Response(serializer.data, status=200)
@@ -2201,7 +2208,7 @@ class AuditorUser(APIView):
 class ClientUser(APIView):
     def get(self, request):
         try:
-            users=User.objects.filter(roles__name='customer')
+            users=User.objects.filter(roles__name='customer',branch=request.user.branch.id)
             print('---',users)
             serializer = UserSerializer(users, many=True)
             return Response(serializer.data, status=200)
@@ -2212,7 +2219,7 @@ class ClientUser(APIView):
 class AgentUser(APIView):
     def get(self, request):
         try:
-            users=User.objects.filter(roles__name='Marketing Agent')
+            users=User.objects.filter(roles__name='Marketing Agent',branch=request.user.branch.id,available_for_assignment=True)
             print('---',users)
             serializer = UserSerializer(users, many=True)
             return Response(serializer.data, status=200)
@@ -2223,7 +2230,7 @@ class AgentUser(APIView):
 class LawyerUser(APIView):
     def get(self, request):
         try:
-            users=User.objects.filter(roles__name='Lawyer')
+            users=User.objects.filter(roles__name='Lawyer',branch=request.user.branch.id)
             print('---',users)
             serializer = UserSerializer(users, many=True)
             return Response(serializer.data, status=200)
@@ -2231,10 +2238,38 @@ class LawyerUser(APIView):
             return Response({"error": str(e)}, status=500)
 
 
+class TrioUser(APIView):
+    def get(self, request):
+        try:
+            print('---',request.user)
+            users = UserProfile.objects.filter(
+                ~Q(user__roles__name='Customer'),
+                branch=request.user.branch.id,profile_completed=True
+            )
+            print('---',users)
+            serializer = UserProfileSerializer(users, many=True)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+class TrioGroupUser(APIView):
+    def get(self, request):
+        try:
+            print('---',request.user)
+            users = UserProfile.objects.filter(
+                ~Q(user__roles__name='Customer'),
+                branch=request.user.branch.id,profile_completed=True
+            )
+            print('---',users)
+            serializer = UserProfileSerializer(users, many=True)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+        
 class entities(APIView):
     def get(self, request):
         try:
-            users=CustomDocumentEntity.objects.all()
+            users=CustomDocumentEntity.objects.filter(branch=request.user.branch.id)
             serializer = CustomDocumentEntitySerializer(users, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:

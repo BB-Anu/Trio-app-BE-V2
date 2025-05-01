@@ -35,12 +35,31 @@ class SubCountySerializer(serializers.ModelSerializer):
     class Meta:
         model = SubCounty
         fields = "__all__"
-
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if instance.county and instance.county.name:
+            rep["county"] = {
+                'id': str(instance.county.id),
+                'name': instance.county.name
+            }
+        else:
+            rep["county"] = None
+        return rep
 class WardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ward
         fields = "__all__"
-
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        
+        # Safely handle the relative_code field, ensuring it's not None
+    
+        if instance.subcounty:
+            # Ensure the relative_code has the first_name field
+            rep["subcounty"] = str(instance.subcounty.name) if hasattr(instance.subcounty, 'name') else None
+        else:
+            rep["subcounty"] = None
+        return rep
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
