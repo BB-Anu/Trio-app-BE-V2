@@ -99,5 +99,11 @@ urlpatterns = [
 
 	path('template_document/', TemplateDocumentListCreateView.as_view(), name='template_document-create'),
     path('template_documents/<int:id>/', TemplateDocumentRetriveUpdateDestroyView.as_view(), name='template_document-update'),
-	path('audit_user/',AuditorUser.as_view,name='audit_user')
+	path('audit_user/',AuditorUser.as_view(),name='audit_user'),
+	path('customer_user/',ClientUser.as_view(),name='customer_user'),
+	path('agent_user/',AgentUser.as_view(),name='agent_user'),
+	path('lawyer_user/',LawyerUser.as_view(),name='lawyer_user'),
+    
+	path('entities/',entities.as_view(),name='entities'),
+	path('folder/<str:entityId>/',folder.as_view(),name='folder'),
 ]
