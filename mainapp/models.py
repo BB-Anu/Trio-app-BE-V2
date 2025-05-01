@@ -129,14 +129,13 @@ class LawyerProfile(models.Model):
 
 class TRIOProfile(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
-	user = models.OneToOneField(UserProfile, on_delete=models.CASCADE, related_name="%(class)s_user")
+	user = models.OneToOneField(UserProfile, on_delete=models.CASCADE, related_name="%(class)s_profile_user")
 	# role = models.ForeignKey('user_management.Role', on_delete=models.CASCADE, related_name="%(class)s_role", blank=True, null=True)
+	task_template=models.ForeignKey('TaskTemplate', on_delete=models.CASCADE, related_name="%(class)s_tasktemplate",null=True,blank=True)
 	qualification = models.TextField()
 	experience_years = models.IntegerField()
 	phone = models.IntegerField()
 	is_active = models.BooleanField()
-	def __str__(self):
-		return self.user
 	
 class Members(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
@@ -150,15 +149,24 @@ class Members(models.Model):
 class LoanCase(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
 	client = models.ForeignKey(ClientProfile, on_delete=models.CASCADE)
-	case_id = models.CharField(max_length=250,)
-	case_reference = models.CharField(max_length=250,)
+	case = models.CharField(max_length=250,blank=True,)
+	case_id = models.CharField(max_length=250,unique=True)
+	case_reference = models.CharField(max_length=250,unique=True)
 	loan_amount = models.DecimalField(max_digits=10, decimal_places=2,)
 	loan_purpose = models.TextField()
 	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_case",blank=True, null=True)
 	created_at = models.DateTimeField(auto_now=True)
+	start_date = models.DateTimeField(null=True,blank=True)
 	status = models.CharField(max_length=40, choices=[ ('new', 'New'),('info_gathering', 'Information Gathering'), ('in_progress', 'Under Analysis'), ('review', 'Under Review'),('rework', 'Rework'), ('approved', 'Approved'), ('declined', 'Declined'),  ('closed', 'Closed'),    ], default='new')
+	def save(self, *args, **kwargs):
+		if not self.case_id:
+			last_id = LoanCase.objects.aggregate(models.Max('id'))['id__max'] or 0
+			next_id = last_id + 1
+			self.case_id = f"CASE{next_id:04d}"       # e.g. CASE0001
+			self.case_reference = f"REF{next_id:04d}"  # e.g. REF0001
+		super().save(*args, **kwargs)
 	def __str__(self):
-		return self.client
+		return f"{self.case_reference} - {self.client.business_name}"
 
 class CaseAssignment(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
@@ -345,11 +353,19 @@ class TaskTemplate(models.Model):
 		return self.title
 
 class TRIOGroup(models.Model):
+	ENTERPRISE_SIZE_CHOICES = [
+		('NANO', 'Nano Enterprise'),
+		('MICRO', 'Micro Enterprise'),
+		('SMALL', 'Small Enterprise'),
+		('MEDIUM', 'Medium Enterprise'),
+	]
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
 	name = models.CharField(max_length=100)
+	enterprise_size = models.CharField(max_length=10, choices=ENTERPRISE_SIZE_CHOICES, null=True, blank=True)
 	created_by = models.ForeignKey('user_management.User', on_delete=models.SET_NULL, null=True)
 	description = models.TextField(blank=True)
 	created_at = models.DateTimeField(auto_now_add=True)
+	is_available=models.BooleanField(default=True)
 	def __str__(self):
 		return self.name
 
@@ -362,17 +378,20 @@ class TRIOGroupMember(models.Model):
 
 class TRIOAssignment(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
-	customer = models.ForeignKey(ClientProfile, on_delete=models.CASCADE)
+	# customer = models.ForeignKey(ClientProfile, on_delete=models.CASCADE)
+	case = models.ForeignKey(LoanCase, on_delete=models.CASCADE,blank=True,null=True,related_name='assignment')
 	group = models.ForeignKey(TRIOGroup, on_delete=models.CASCADE)
-	assigned_by = models.ForeignKey('user_management.User', on_delete=models.SET_NULL, null=True)
+	assigned_by = models.ForeignKey('user_management.User', on_delete=models.SET_NULL, null=True,related_name='assign_by')
+	assigned_to = models.ManyToManyField('user_management.User', null=True,related_name='assign_to')
 	assigned_on = models.DateTimeField(auto_now_add=True)
 	def __str__(self):
-		return self.customer
+		return f'{self.case}-{self.group}'
 
 class Task(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
 	assignment = models.ForeignKey(TRIOAssignment, on_delete=models.CASCADE)
 	template = models.ForeignKey(TaskTemplate, on_delete=models.SET_NULL, null=True)
+	task_description=models.CharField(max_length=250,null=True,blank=True)
 	assigned_to = models.ForeignKey('TRIOProfile', on_delete=models.SET_NULL, null=True)
 	due_date = models.DateField()
 	status = models.CharField(max_length=20, choices=[
@@ -395,14 +414,14 @@ class TaskDeliverable(models.Model):
 
 class TaskTimesheet(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
-	employee = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name='%(class)s_employee')
-	task = models.ForeignKey(Task, on_delete=models.CASCADE)
+	employee = models.ForeignKey(TRIOProfile, on_delete=models.CASCADE, related_name='%(class)s_employee')
+	# task = models.ForeignKey(Task, on_delete=models.CASCADE)
+	task = models.CharField(max_length=255,null=True,blank=True)
 	date = models.DateField()
 	total_working_hours = models.FloatField(null=True,blank=True)
-	hours_spent = models.FloatField()
+	hours_spent = models.FloatField(default=0.0)
 	remarks = models.TextField(blank=True)
-	def __str__(self):
-		return self.employee
+	
 	
 class FinalReport(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)

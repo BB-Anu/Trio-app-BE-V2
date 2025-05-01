@@ -73,6 +73,8 @@ class LoanCaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = LoanCase
         fields = "__all__"
+        read_only_fields = ['case_id', 'case_reference']
+
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         try:
@@ -101,7 +103,32 @@ class TRIOAssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = TRIOAssignment
         fields = "__all__"
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if instance.group and instance.group.name:
+            rep["group"] = {
+                'id': str(instance.group.id),
+                'name': instance.group.name
+            }
+        else:
+            rep["group"] = None
 
+        if instance.case and instance.case.case:
+            rep["case"] = {
+                'id': str(instance.case.id),
+                'name': instance.case.case
+            }
+        else:
+            rep["case"] = None
+        if instance.assigned_by:
+            rep["assigned_by"] = {
+                'id': str(instance.assigned_by.id),
+                'name': instance.assigned_by.first_name
+            }
+        else:
+            rep["assigned_by"] = None
+        
+        return rep
 class AuditLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditLog
@@ -156,13 +183,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         if instance.user and instance.user.first_name:
-            rep["user"] = {
+            rep["group"] = {
                 'id': str(instance.user.id),
                 'name': instance.user.first_name,
                 'roles': instance.user.roles.name
             }
         else:
-            rep["user"] = None
+            rep["group"] = None
+
+            
         return rep
 
 class DocumentAccessSerializer(serializers.ModelSerializer):
@@ -196,7 +225,7 @@ class TRIOGroupMemberSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         try:
-            rep["group"] = instance.group.name
+            rep["group"] = f"{instance.group.name} ({instance.group.get_enterprise_size_display()})"
         except AttributeError:
             rep["group"] = None
         try:
@@ -220,6 +249,13 @@ class TRIOProfileSerializer(serializers.ModelSerializer):
             }
         else:
             rep["user"] = None
+        if instance.task_template:
+            rep["task_template"] = {
+                'id': str(instance.task_template.template.Template.id),
+                'name': instance.task_template.template.Template.name
+            }
+        else:
+            rep["task_template"] = None
         return rep
 class FinalReportSerializer(serializers.ModelSerializer):
     class Meta:
@@ -231,6 +267,30 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = "__all__"
 
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if instance.assignment.case.id and instance.assignment.case.case:
+            rep["assignment"] = {
+                'id': str(instance.assignment.case.id),
+                'name': instance.assignment.case.case
+            }
+        else:
+            rep["assignment"] = None
+        if instance.template:
+            rep["template"] = {
+                'id': str(instance.template.template.Template.id),
+                'name': instance.template.template.Template.name
+            }
+        else:
+            rep["template"] = None
+        if instance.assigned_to:
+            rep["assigned_to"] = {
+                'id': str(instance.assigned_to.user.user.id),
+                'name': instance.assigned_to.user.user.first_name
+            }
+        else:
+            rep["assigned_to"] = None
+        return rep
 class TaskAuditLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskAuditLog

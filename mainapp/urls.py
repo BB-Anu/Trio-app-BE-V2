@@ -103,6 +103,8 @@ urlpatterns = [
 	path('customer_user/',ClientUser.as_view(),name='customer_user'),
 	path('agent_user/',AgentUser.as_view(),name='agent_user'),
 	path('lawyer_user/',LawyerUser.as_view(),name='lawyer_user'),
+	path('trio_user/',TrioUser.as_view(),name='trio_user'),
+	path('trio_group_user/',TrioGroupUser.as_view(),name='trio_group_user'),
     
 	path('entities/',entities.as_view(),name='entities'),
 	path('folder/<str:entityId>/',folder.as_view(),name='folder'),

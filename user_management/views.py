@@ -186,7 +186,9 @@ class FunctionRetrieveUpdateDestroyView(APIView):
 
 class CountyListCreateView(APIView):
     def get(self, request):
-        records = County.objects.all()
+        print(request.user.branch.id)
+        records = County.objects.filter(branch=request.user.branch.id)
+        print(records)
         serializer = CountySerializer(records, many=True)
         return Response(serializer.data)
 
@@ -284,7 +286,8 @@ class RoleRetrieveUpdateDestroyView(APIView):
 
 class SubCountyListCreateView(APIView):
     def get(self, request):
-        records = SubCounty.objects.all()
+        print('-',request.user.branch.id)
+        records = SubCounty.objects.filter(branch=request.user.branch.id)
         serializer = SubCountySerializer(records, many=True)
         return Response(serializer.data)
 
@@ -329,7 +332,7 @@ class SubCountyRetrieveUpdateDestroyView(APIView):
 
 class WardListCreateView(APIView):
     def get(self, request):
-        records = Ward.objects.all()
+        records = Ward.objects.filter(branch=request.user.branch.id)
         serializer = WardSerializer(records, many=True)
         return Response(serializer.data)
 
