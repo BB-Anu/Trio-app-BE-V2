@@ -415,7 +415,7 @@ class TaskDeliverable(models.Model):
 class TaskTimesheet(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
 	employee = models.ForeignKey(TRIOProfile, on_delete=models.CASCADE, related_name='%(class)s_employee')
-	# task = models.ForeignKey(Task, on_delete=models.CASCADE)
+	case = models.ForeignKey(LoanCase, on_delete=models.CASCADE,null=True,blank=True)
 	task = models.CharField(max_length=255,null=True,blank=True)
 	date = models.DateField()
 	total_working_hours = models.FloatField(null=True,blank=True)
@@ -546,7 +546,7 @@ class TimeSheet(models.Model):
 
 class TimesheetEntry(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
-	timesheet= models.ForeignKey(TimeSheet, on_delete=models.CASCADE, related_name='%(class)s_timesheet')
+	timesheet= models.ForeignKey(TaskTimesheet, on_delete=models.CASCADE, related_name='%(class)s_timesheet')
 	task= models.ForeignKey(Task, on_delete=models.CASCADE, related_name='%(class)s_task',blank=True, null=True)
 	hours = models.FloatField()
 	work_done = models.TextField()

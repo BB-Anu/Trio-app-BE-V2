@@ -1253,7 +1253,14 @@ class FinalReportRetrieveUpdateDestroyView(APIView):
 
 class TaskListCreateView(APIView):
     def get(self, request):
-        records = Task.objects.filter(branch=request.user.branch.id)
+        print(request.user)
+        user=UserProfile.objects.get(user=request.user.id)
+        print('---',user.id)
+        profile=TRIOProfile.objects.get(user=user.id)
+        print('---',profile.id)
+
+        # assigned_to
+        records = Task.objects.filter(branch=request.user.branch.id,assigned_to=profile.id)
         serializer = TaskSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -1386,7 +1393,13 @@ class TaskDeliverableRetrieveUpdateDestroyView(APIView):
 
 class TaskTimesheetListCreateView(APIView):
     def get(self, request):
-        records = TaskTimesheet.objects.filter(branch=request.user.branch.id)
+        print(request.user.id)
+        user=UserProfile.objects.get(user=request.user)
+        print('-----user---',user)
+        profile=TRIOProfile.objects.get(user=user.id)
+        print('-----profile---',profile)
+
+        records = TaskTimesheet.objects.filter(branch=request.user.branch.id,employee=profile.id)
         serializer = TaskTimesheetSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -2283,6 +2296,20 @@ class folder(APIView):
             folders = FolderMaster.objects.filter(entity__entity_id=entityId)
             print('---',folders)
             serializer = FolderMasterSerializer(folders, many=True)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+                return Response({"error": str(e)}, status=500)
+        
+
+
+class template_task(APIView):
+    def get(self, request,pk):
+    # Get folders associated with the given entity_id
+        try:
+            print('---',request.data,pk)
+            folders = TaskTimesheet.objects.get(pk=pk)
+            print('---',folders)
+            serializer = TaskTimesheetSerializer(folders)
             return Response(serializer.data, status=200)
         except Exception as e:
                 return Response({"error": str(e)}, status=500)

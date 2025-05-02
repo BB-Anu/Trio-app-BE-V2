@@ -108,4 +108,5 @@ urlpatterns = [
     
 	path('entities/',entities.as_view(),name='entities'),
 	path('folder/<str:entityId>/',folder.as_view(),name='folder'),
+    path('tasktimesheet_hours/<pk>/',template_task.as_view(),name='tasktimesheet_hours')
 ]

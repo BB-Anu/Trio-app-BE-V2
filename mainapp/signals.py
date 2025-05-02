@@ -4,6 +4,7 @@ from django.utils.timezone import now
 from .models import *
 from django.utils import timezone
 from datetime import timedelta
+import re
 
 
 @receiver(post_save, sender=DocumentUpload)
@@ -111,24 +112,56 @@ def assign_case_based_on_enterprise_size(sender, instance, created, **kwargs):
                             )
                         # Divide total hours equally among checklist items
                             total_hours = allocated_hours
-                            # For each checklist item, create a separate task
-                            for item in checklist_items:
-                                # Divide total hours equally among checklist items
-                                per_task_hours = round(total_hours / len(checklist_items), 2)
+                            # # For each checklist item, create a separate task
+                            # for item in checklist_items:
+                            #     # Divide total hours equally among checklist items
+                            #     per_task_hours = round(total_hours / len(checklist_items), 2)
 
-                                # Create a separate TaskTimesheet entry for each checklist item
-                                TaskTimesheet.objects.create(
-                                    branch=instance.branch,
-                                    employee=trio_profile,
-                                    task=item,  # This is the individual checklist item text
-                                    date=instance.start_date,  # Use the start date or timezone.now().date()
-                                    total_working_hours=per_task_hours,
-                                    hours_spent=0.0,
-                                    remarks="Auto-created task from checklist"
-                                )
+                            #     # Create a separate TaskTimesheet entry for each checklist item
+                            #     TaskTimesheet.objects.create(
+                            #         branch=instance.branch,
+                            #         employee=trio_profile,
+                            #         task=item,  # This is the individual checklist item text
+                            #         date=instance.start_date,  # Use the start date or timezone.now().date()
+                            #         total_working_hours=per_task_hours,
+                            #         hours_spent=0.0,
+                            #         remarks="Auto-created task from checklist"
+                            #     )
 
+                        checklist_items = [
+                            item.strip()
+                            for item in re.split(r'(?<=[.])\s+(?=[A-Z])', template.checklist.strip())
+                            if item.strip()
+                        ]
+                        print('Checklist Items:', checklist_items)
 
+                        total_hours = task_temp.hours_allocated
+                        per_task_hours = round(total_hours / len(checklist_items), 2)
+                        days_required = round(total_hours / 8, 2)
+                        due_date = instance.start_date + timedelta(days=days_required)
+                        for item in checklist_items:
+                            # Create Task once per checklist item
+                            # task_obj = Task.objects.create(
+                            #     branch=instance.branch,
+                            #     assignment=case_assignment,
+                            #     template=template,
+                            #     assigned_to=trio_profile,
+                            #     due_date=due_date,
+                            #     status='pending',
+                            #     task_description=item
+                            # )
 
+                            # Create TaskTimesheet for the created Task
+                            TaskTimesheet.objects.create(
+                                branch=instance.branch,
+                                employee=trio_profile,
+                                task=item,  # Optional: use `task=task_obj` if FK
+                                case=instance,
+                                date=instance.start_date,
+                                total_working_hours=per_task_hours,
+                                hours_spent=0.0,
+                                remarks="Auto-created task from checklist"
+                            )
                         # Example: create tasks, assign etc.
                         # Task.objects.create(
                         #     branch=instance.branch,
