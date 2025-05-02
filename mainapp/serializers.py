@@ -305,7 +305,23 @@ class TaskTimesheetSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskTimesheet
         fields = "__all__"
-
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if instance.case.id and instance.case.case:
+            rep["case"] = {
+                'id': str(instance.case.id),
+                'name': instance.case.case
+            }
+        else:
+            rep["case"] = None
+        if instance.employee.id :
+            rep["employee"] = {
+                'id': str(instance.employee.user.user.id),
+                'name': instance.employee.user.user.first_name
+            }
+        else:
+            rep["employee"] = None
+        return rep
 class TimesheetEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = TimesheetEntry
