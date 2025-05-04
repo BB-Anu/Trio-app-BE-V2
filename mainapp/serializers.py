@@ -183,13 +183,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         if instance.user and instance.user.first_name:
-            rep["group"] = {
+            rep["user"] = {
                 'id': str(instance.user.id),
                 'name': instance.user.first_name,
                 'roles': instance.user.roles.name
             }
         else:
-            rep["group"] = None
+            rep["user"] = None
 
             
         return rep

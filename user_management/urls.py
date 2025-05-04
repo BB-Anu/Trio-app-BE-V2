@@ -39,5 +39,6 @@ urlpatterns = [
 	path('user_permission/<int:user_id>/', GetPermissionAPI.as_view(), name='user_permission'),
 	path('role_permission/<int:pk>/', GetRolePermissionAPI.as_view(), name='role_permission'),
 
+
 ]
 

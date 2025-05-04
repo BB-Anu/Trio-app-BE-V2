@@ -104,6 +104,7 @@ urlpatterns = [
 	path('agent_user/',AgentUser.as_view(),name='agent_user'),
 	path('lawyer_user/',LawyerUser.as_view(),name='lawyer_user'),
 	path('trio_user/',TrioUser.as_view(),name='trio_user'),
+	path('trio_user/<pk>',TrioUserRetrive.as_view(),name='trio_user_get'),
 	path('trio_group_user/',TrioGroupUser.as_view(),name='trio_group_user'),
     
 	path('entities/',entities.as_view(),name='entities'),

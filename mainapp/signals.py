@@ -53,7 +53,7 @@ def assign_case_based_on_enterprise_size(sender, instance, created, **kwargs):
         print('enterprise_size,',enterprise_size)
         try:
             # Get users in the group matching the enterprise size
-            group = TRIOGroup.objects.get(enterprise_size=enterprise_size)
+            group = TRIOGroup.objects.filter(enterprise_size=enterprise_size,is_available=True).first()
             print('----',group)
             group_members = TRIOGroupMember.objects.filter(group=group)
 
