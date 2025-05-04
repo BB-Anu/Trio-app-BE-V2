@@ -264,17 +264,29 @@ class RoleRetrieveUpdateDestroyView(APIView):
             return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
         serializer = RoleSerializer(role)
         return Response(serializer.data)
-
     def put(self, request, pk):
         print('------request.data', request.data)
+        
         role = self.get_object(pk)
         if not role:
             return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = RoleSerializer(role, data=request.data)
-        if serializer.is_valid():
+        
+        # Ensure 'functions' are properly mapped to 'permissions'
+        request_data = request.data.copy()
+        request_data['permissions'] = list(map(int, request_data.get('functions', [])))
+        
+        serializer = RoleSerializer(role, data=request_data)
+        
+        is_valid = serializer.is_valid()
+        print('--- is_valid:', is_valid)
+        
+        if is_valid:
             serializer.save()
             return Response(serializer.data)
+        
+        print('- errors:', serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
     def delete(self, request, pk):
         role = self.get_object(pk)

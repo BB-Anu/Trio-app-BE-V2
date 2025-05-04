@@ -1194,9 +1194,11 @@ class TRIOProfileRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             serializer = TRIOProfileSerializer(records, data=request.data)
+            print(request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
+            print(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -1253,16 +1255,21 @@ class FinalReportRetrieveUpdateDestroyView(APIView):
 
 class TaskListCreateView(APIView):
     def get(self, request):
-        print(request.user)
-        user=UserProfile.objects.get(user=request.user.id)
-        print('---',user.id)
-        profile=TRIOProfile.objects.get(user=user.id)
-        print('---',profile.id)
+        if request.user.is_superuser:
+            records = Task.objects.filter(branch=request.user.branch.id)
+            serializer = TaskSerializer(records, many=True)
+            return Response(serializer.data)    
+        else:
+            print(request.user)
+            user=UserProfile.objects.get(user=request.user.id)
+            print('---',user.id)
+            profile=TRIOProfile.objects.get(user=user.id)
+            print('---',profile.id)
 
-        # assigned_to
-        records = Task.objects.filter(branch=request.user.branch.id,assigned_to=profile.id)
-        serializer = TaskSerializer(records, many=True)
-        return Response(serializer.data)
+            # assigned_to
+            records = Task.objects.filter(branch=request.user.branch.id,assigned_to=profile.id)
+            serializer = TaskSerializer(records, many=True)
+            return Response(serializer.data)
 
     def post(self, request):
         serializer = TaskSerializer(data=request.data)
@@ -1393,15 +1400,20 @@ class TaskDeliverableRetrieveUpdateDestroyView(APIView):
 
 class TaskTimesheetListCreateView(APIView):
     def get(self, request):
-        print(request.user.id)
-        user=UserProfile.objects.get(user=request.user)
-        print('-----user---',user)
-        profile=TRIOProfile.objects.get(user=user.id)
-        print('-----profile---',profile)
+        if request.user.is_superuser:
+            records = TaskTimesheet.objects.filter(branch=request.user.branch.id)
+            serializer = TaskTimesheetSerializer(records, many=True)
+            return Response(serializer.data)
+        else:
+            print(request.user.id)
+            user=UserProfile.objects.get(user=request.user)
+            print('-----user---',user)
+            profile=TRIOProfile.objects.get(user=user.id)
+            print('-----profile---',profile)
 
-        records = TaskTimesheet.objects.filter(branch=request.user.branch.id,employee=profile.id)
-        serializer = TaskTimesheetSerializer(records, many=True)
-        return Response(serializer.data)
+            records = TaskTimesheet.objects.filter(branch=request.user.branch.id,employee=profile.id)
+            serializer = TaskTimesheetSerializer(records, many=True)
+            return Response(serializer.data)
 
     def post(self, request):
         serializer = TaskTimesheetSerializer(data=request.data)
@@ -2261,6 +2273,18 @@ class TrioUser(APIView):
             )
             print('---',users)
             serializer = UserProfileSerializer(users, many=True)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class TrioUserRetrive(APIView):
+    def get(self, request,pk):
+        try:
+            print('---',request.user)
+            users = UserProfile.objects.get(pk=pk)            
+            print('---',users)
+            serializer = UserProfileSerializer(users)
             return Response(serializer.data, status=200)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
