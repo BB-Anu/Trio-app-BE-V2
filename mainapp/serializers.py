@@ -99,6 +99,17 @@ class FolderMasterSerializer(serializers.ModelSerializer):
         model = FolderMaster
         fields = "__all__"
 
+    def to_representation(self, instance):
+        rep= super().to_representation(instance)
+        if instance.client:
+            rep['client']={
+                'id':str(instance.client.user.id),
+                'name':str(instance.client.user.first_name)
+            }
+        else:
+            rep['client']=None
+
+        return rep
 class TRIOAssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = TRIOAssignment
@@ -143,7 +154,13 @@ class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
         fields = "__all__"
-
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        try:
+            rep["case"] = instance.case.case
+        except AttributeError:
+            rep["case"] = None
+        return rep
 class RiskAssessmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = RiskAssessment

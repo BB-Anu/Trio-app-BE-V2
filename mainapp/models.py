@@ -190,7 +190,7 @@ class Document(models.Model):
 	version = models.IntegerField()
 	uploaded_at = models.DateTimeField(auto_now_add=True)
 	def __str__(self):
-		return self.case
+		return self.document_type
 
 class ComplianceChecklist(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
@@ -209,6 +209,7 @@ class CustomDocumentEntity(models.Model):
 	entity_id = models.CharField(max_length=250,)
 	entity_name = models.CharField(max_length=250,)
 	entity_type = models.CharField(max_length=250,)
+	client = models.ForeignKey(ClientProfile, on_delete=models.CASCADE, blank=True, null=True,related_name='%(class)s_client')
 	description = models.TextField(blank=True, null=True,)
 	def __str__(self):
 		return self.entity_id
@@ -220,6 +221,7 @@ class FolderMaster(models.Model):
 	description = models.TextField(max_length=500,blank=True, null=True)
 	entity=models.ForeignKey(CustomDocumentEntity, on_delete=models.CASCADE)
 	client = models.ForeignKey(ClientProfile, on_delete=models.CASCADE, blank=True, null=True,related_name='%(class)s_client')
+	case = models.ForeignKey(LoanCase, on_delete=models.CASCADE,blank=True, null=True,related_name='%(class)s_case')
 	master_checkbox_file = models.BooleanField(default=False, blank=True, null=True)
 	parent_folder=models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='FolderMasters')
 	default_folder=models.BooleanField(default=False)

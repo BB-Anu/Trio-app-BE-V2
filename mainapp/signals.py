@@ -49,6 +49,17 @@ def create_document_history_and_audit(sender, instance, created, **kwargs):
 @receiver(post_save, sender=LoanCase)
 def assign_case_based_on_enterprise_size(sender, instance, created, **kwargs):
     if created and instance.client.enterprise_size:
+        entity=CustomDocumentEntity.objects.get(client=instance.client)
+        FolderMaster.objects.create(
+        branch=instance.branch if hasattr(instance, 'branch') else None,
+        folder_id= f"ENT-{instance.id}",
+        folder_name=f"ENT-{instance.case}-{instance.case_id}",
+        case=instance,
+        description = f"Created for {instance.case}",
+        entity=entity,
+        client = instance.client,
+        created_by =instance.created_by,
+        )
         enterprise_size = instance.client.enterprise_size  # NANO, MICRO, etc.
         print('enterprise_size,',enterprise_size)
         try:
@@ -177,4 +188,20 @@ def assign_case_based_on_enterprise_size(sender, instance, created, **kwargs):
                         continue
         except TRIOGroup.DoesNotExist:
             pass
+
             
+@receiver(post_save, sender=ClientProfile)
+def create_customdocument_entity(sender, instance, created, **kwargs):
+    if created:
+        entity_id = f"ENT-{instance.id}"
+        entity_name = f"{instance.business_name}"  
+        CustomDocumentEntity.objects.create(
+        branch=instance.branch if hasattr(instance, 'branch') else None,
+        entity_id=entity_id,
+        entity_name=entity_name,
+        entity_type="Client",  
+        client=instance,
+        description=f"Auto-created entity for {instance} profile"
+        )
+        
+        
