@@ -28,6 +28,7 @@ urlpatterns = [
 	path("compliancechecklist/", ComplianceChecklistListCreateView.as_view(), name="compliancechecklist-create"),
 	path("compliancechecklist/<pk>/", ComplianceChecklistRetrieveUpdateDestroyView.as_view(), name="compliancechecklist-update"),
 	path("document/", DocumentListCreateView.as_view(), name="document-create"),
+	path("client_document/<int:case_id>/", ClientDocumentListCreateView.as_view(), name="client-document-create"),
 	path("document/<pk>/", DocumentRetrieveUpdateDestroyView.as_view(), name="document-update"),
 	path("riskassessment/", RiskAssessmentListCreateView.as_view(), name="riskassessment-create"),
 	path("riskassessment/<pk>/", RiskAssessmentRetrieveUpdateDestroyView.as_view(), name="riskassessment-update"),

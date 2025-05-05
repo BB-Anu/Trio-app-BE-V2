@@ -634,6 +634,24 @@ class DocumentListCreateView(APIView):
         print('-------',serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class ClientDocumentListCreateView(APIView):
+    def get(self, request,case_id):
+        print('---',case_id)
+        records = Document.objects.filter(branch=request.user.branch.id,case=case_id)
+        print('---',records)
+        serializer = DocumentSerializer(records, many=True)
+        print(serializer.data)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = DocumentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        print('-------',serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class DocumentRetrieveUpdateDestroyView(APIView):
     def get_object(self, pk):
         try:
