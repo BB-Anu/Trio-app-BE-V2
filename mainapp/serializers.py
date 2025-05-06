@@ -160,7 +160,12 @@ class DocumentSerializer(serializers.ModelSerializer):
             rep["case"] = instance.case.case
         except AttributeError:
             rep["case"] = None
+        try:
+            rep["uploaded_by"] = instance.uploaded_by.first_name
+        except AttributeError:
+            rep["uploaded_by"] = None
         return rep
+    
 class RiskAssessmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = RiskAssessment

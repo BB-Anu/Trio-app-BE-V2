@@ -189,6 +189,8 @@ class Document(models.Model):
 	file = models.FileField(upload_to="documents/", validators=[FileExtensionValidator(allowed_extensions=["pdf", "doc", "docx"])],null=True, blank=True )
 	version = models.IntegerField()
 	uploaded_at = models.DateTimeField(auto_now_add=True)
+	status=models.CharField(max_length=10,choices=[('pending','pending'),('approved','approved'),('rejected','rejected')],default='pending')
+	reject_reason= models.CharField(max_length=250,null=True,blank=True)
 	def __str__(self):
 		return self.document_type
 
