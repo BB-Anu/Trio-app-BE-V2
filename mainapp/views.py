@@ -635,6 +635,35 @@ class DocumentListCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class DocumentApproveListCreateView(APIView):
+    def put(self, request, pk):
+        try:
+            print('====',pk)
+            doc = Document.objects.get(pk=pk)
+            print('===',doc)
+            doc.status = 'approved'
+            doc.save()
+            return Response({'message': 'Document approved successfully.'}, status=status.HTTP_200_OK)
+        except Document.DoesNotExist:
+            return Response({'error': 'Document not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class DocumentRejectListCreateView(APIView):
+    def put(self, request, pk,reject_reason):
+        try:
+            print('====',pk)
+            doc = Document.objects.get(pk=pk)
+            print('===',doc)
+            doc.status = 'rejected'
+            doc.reject_reason=reject_reason
+            doc.save()
+            return Response({'message': 'Document approved successfully.'}, status=status.HTTP_200_OK)
+        except Document.DoesNotExist:
+            return Response({'error': 'Document not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class ClientDocumentListCreateView(APIView):
     def get(self, request,case_id):
         print('---',case_id)
