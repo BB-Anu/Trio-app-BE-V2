@@ -401,7 +401,7 @@ class ProjectsRetrieveUpdateDestroyView(APIView):
 
 class DocumentTypeListCreateView(APIView):
     def get(self, request):
-        records = DocumentType.objects.filter(branch=request.user.branch.id)
+        records = DocumentType.objects.all()
         serializer = DocumentTypeSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -622,7 +622,7 @@ class ComplianceChecklistRetrieveUpdateDestroyView(APIView):
 
 class DocumentListCreateView(APIView):
     def get(self, request):
-        records = Document.objects.filter(branch=request.user.branch.id)
+        records = Document.objects.filter(branch=request.user.branch.id,uploaded_by=request.user)
         serializer = DocumentSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -642,6 +642,7 @@ class DocumentApproveListCreateView(APIView):
             doc = Document.objects.get(pk=pk)
             print('===',doc)
             doc.status = 'approved'
+            doc.reject_reason=''
             doc.save()
             return Response({'message': 'Document approved successfully.'}, status=status.HTTP_200_OK)
         except Document.DoesNotExist:
@@ -666,7 +667,7 @@ class DocumentRejectListCreateView(APIView):
 
 class ClientDocumentListCreateView(APIView):
     def get(self, request,case_id):
-        print('---',case_id)
+        print('---',case_id,request.user.branch.id)
         records = Document.objects.filter(branch=request.user.branch.id,case=case_id)
         print('---',records)
         serializer = DocumentSerializer(records, many=True)
