@@ -1516,12 +1516,43 @@ class TimesheetEntryListCreateView(APIView):
         serializer = TimesheetEntrySerializer(records, many=True)
         return Response(serializer.data)
 
+    # def post(self, request):
+    #     serializer = TimesheetEntrySerializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     def post(self, request):
+        timesheet_id = request.data.get('timesheet')
+        new_hours = float(request.data.get('hours', 0))
+
+        try:
+            timesheet = TaskTimesheet.objects.get(id=timesheet_id)
+        except TaskTimesheet.DoesNotExist:
+            return Response({"error": "Timesheet not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        total_existing_hours = TimesheetEntry.objects.filter(timesheet=timesheet).aggregate(
+            total=models.Sum('hours'))['total'] or 0
+
+        remaining_hours = (timesheet.working_hours or 0) - total_existing_hours
+
+        if new_hours > remaining_hours:
+            return Response(
+                {"error": f"Only {remaining_hours} working hours are remaining for this timesheet."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         serializer = TimesheetEntrySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+
+            # Update total_working_hours in TimeSheet
+            timesheet.total_working_hours = (total_existing_hours + new_hours)
+            timesheet.save()
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class TimesheetEntryRetrieveUpdateDestroyView(APIView):
     def get_object(self, pk):
@@ -1537,15 +1568,46 @@ class TimesheetEntryRetrieveUpdateDestroyView(APIView):
             return Response(serializer.data)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+    # def put(self, request, pk):
+    #     records = self.get_object(pk)
+    #     if records:
+    #         serializer = TimesheetEntrySerializer(records, data=request.data)
+    #         if serializer.is_valid():
+    #             serializer.save()
+    #             return Response(serializer.data)
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     return Response(status=status.HTTP_404_NOT_FOUND)
     def put(self, request, pk):
-        records = self.get_object(pk)
-        if records:
-            serializer = TimesheetEntrySerializer(records, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        instance = self.get_object(pk)
+        if not instance:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        timesheet = instance.timesheet
+        new_hours = float(request.data.get('hours', 0))
+
+        total_existing_hours = TimesheetEntry.objects.filter(
+            timesheet=timesheet
+        ).exclude(id=instance.id).aggregate(total=models.Sum('hours'))['total'] or 0
+
+        remaining_hours = (timesheet.working_hours or 0) - total_existing_hours
+
+        if new_hours > remaining_hours:
+            return Response(
+                {"error": f"Only {remaining_hours} working hours are remaining for this timesheet."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = TimesheetEntrySerializer(instance, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+
+            # Update total_working_hours in TimeSheet
+            timesheet.total_working_hours = total_existing_hours + new_hours
+            timesheet.save()
+
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
     def delete(self, request, pk):
         records = self.get_object(pk)
