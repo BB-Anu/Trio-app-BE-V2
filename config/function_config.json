@@ -117,7 +117,8 @@
         "subcounty-update",
         "ward-create",
         "ward-update",
-        "user-create"
+        "user-create",
+        "client_documents"
     
 
     ]

@@ -622,9 +622,14 @@ class ComplianceChecklistRetrieveUpdateDestroyView(APIView):
 
 class DocumentListCreateView(APIView):
     def get(self, request):
-        records = Document.objects.filter(branch=request.user.branch.id,uploaded_by=request.user)
-        serializer = DocumentSerializer(records, many=True)
-        return Response(serializer.data)
+        if request.user.is_superuser:
+            records = Document.objects.filter(branch=request.user.branch.id)
+            serializer = DocumentSerializer(records, many=True)
+            return Response(serializer.data)
+        else:
+            records = Document.objects.filter(branch=request.user.branch.id,uploaded_by=request.user)
+            serializer = DocumentSerializer(records, many=True)
+            return Response(serializer.data)
 
     def post(self, request):
         serializer = DocumentSerializer(data=request.data)
@@ -653,7 +658,7 @@ class DocumentApproveListCreateView(APIView):
 class DocumentRejectListCreateView(APIView):
     def put(self, request, pk,reject_reason):
         try:
-            print('====',pk)
+            print('==pk==',pk)
             doc = Document.objects.get(pk=pk)
             print('===',doc)
             doc.status = 'rejected'
@@ -699,12 +704,16 @@ class DocumentRetrieveUpdateDestroyView(APIView):
     def put(self, request, pk):
         records = self.get_object(pk)
         if records:
-            serializer = DocumentSerializer(records, data=request.data)
+            data = request.data.copy()
+            data['status'] = 'pending'
+            data['reject_reason'] = ''
+            serializer = DocumentSerializer(records, data=data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
+
 
     def delete(self, request, pk):
         records = self.get_object(pk)
@@ -2385,4 +2394,38 @@ class template_task(APIView):
             return Response(serializer.data, status=200)
         except Exception as e:
                 return Response({"error": str(e)}, status=500)
-        
+
+class Dashboard(APIView):
+    def get(self,request):
+        try:
+            task_count = Task.objects.all().count()
+            assignment_count = TRIOAssignment.objects.all().count()
+            triogroup=TRIOGroup.objects.all().count()
+            case=LoanCase.objects.all().count()
+            return Response({
+                'task': task_count,
+                'assignment': assignment_count,
+                'group':triogroup,
+                'case':case
+            })
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class UserDashboard(APIView):
+    def get(self,request):
+        try:
+            print('---',request.user.id)
+            user=TRIOProfile.objects.get(user__user=request.user.id)
+            task_count = Task.objects.filter(assigned_to=user).count()
+            print('---task_count',task_count)
+            timesheet=TaskTimesheet.objects.filter(employee=user).count()
+
+            assignment_count = TRIOAssignment.objects.all().count()
+            return Response({
+                'task': task_count,
+                'assignment': assignment_count,
+                'timesheet':timesheet,
+            })
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)

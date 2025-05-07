@@ -30,7 +30,7 @@ urlpatterns = [
 	path("document/", DocumentListCreateView.as_view(), name="document-create"),
     path("document_approve/<int:pk>/", DocumentApproveListCreateView.as_view(), name="document-approve"),
 	path("document_reject/<int:pk>/<str:reject_reason>/", DocumentRejectListCreateView.as_view(), name="document-reject"),
-	path("document/", DocumentListCreateView.as_view(), name="document-create"),
+	# path("document/", DocumentListCreateView.as_view(), name="document-create"),
 	path("client_document/<int:case_id>/", ClientDocumentListCreateView.as_view(), name="client-document-create"),
 	path("document/<pk>/", DocumentRetrieveUpdateDestroyView.as_view(), name="document-update"),
 	path("riskassessment/", RiskAssessmentListCreateView.as_view(), name="riskassessment-create"),
@@ -113,5 +113,7 @@ urlpatterns = [
     
 	path('entities/',entities.as_view(),name='entities'),
 	path('folder/<str:entityId>/',folder.as_view(),name='folder'),
-    path('tasktimesheet_hours/<pk>/',template_task.as_view(),name='tasktimesheet_hours')
+    path('tasktimesheet_hours/<pk>/',template_task.as_view(),name='tasktimesheet_hours'),
+    path('dashboard/',Dashboard.as_view(),name='dashboard'),
+    path('user_dashboard/',UserDashboard.as_view(),name='user_dashboard')
 ]
