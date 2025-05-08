@@ -48,6 +48,9 @@ def create_document_history_and_audit(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=LoanCase)
 def assign_case_based_on_enterprise_size(sender, instance, created, **kwargs):
+    if created and instance.status != 'info_gathering':
+        LoanCase.objects.filter(pk=instance.pk).update(status='info_gathering')
+
     if created and instance.client.enterprise_size:
         entity=CustomDocumentEntity.objects.get(client=instance.client)
         FolderMaster.objects.create(
@@ -204,4 +207,17 @@ def create_customdocument_entity(sender, instance, created, **kwargs):
         description=f"Auto-created entity for {instance} profile"
         )
         
+        
+
+
+@receiver(post_save, sender=TimesheetEntry)
+def update_case_status_on_timesheet(sender, instance, created, **kwargs):
+    if created:
+        try:
+            case = instance.timesheet.case
+            if case and case.status == 'info_gathering':
+                case.status = 'in_progress'
+                case.save()
+        except LoanCase.DoesNotExist:
+            pass
         
