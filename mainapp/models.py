@@ -386,7 +386,7 @@ class TRIOAssignment(models.Model):
 	case = models.ForeignKey(LoanCase, on_delete=models.CASCADE,blank=True,null=True,related_name='assignment')
 	group = models.ForeignKey(TRIOGroup, on_delete=models.CASCADE)
 	assigned_by = models.ForeignKey('user_management.User', on_delete=models.SET_NULL, null=True,related_name='assign_by')
-	assigned_to = models.ManyToManyField('user_management.User', null=True,related_name='assign_to')
+	assigned_to = models.ManyToManyField('user_management.User',related_name='assign_to')
 	assigned_on = models.DateTimeField(auto_now_add=True)
 	def __str__(self):
 		return f'{self.case}-{self.group}'
@@ -425,8 +425,10 @@ class TaskTimesheet(models.Model):
 	total_working_hours = models.FloatField(null=True,blank=True)
 	hours_spent = models.FloatField(default=0.0)
 	remarks = models.TextField(blank=True)
-	
-	
+	status=models.CharField(max_length=20,choices=[('pending','pending'),('completed','completed'),('approved','approved'),('rejected','rejected')],default='pending')
+	def __str__(self):
+		return str(self.id) 
+
 class FinalReport(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
 	assignment = models.ForeignKey(TRIOAssignment, on_delete=models.CASCADE)
@@ -565,11 +567,11 @@ class TimesheetEntry(models.Model):
 	is_wfh_hours = models.BooleanField(default=False,blank=True, null=True)
 	payment_status = models.CharField(max_length=50,choices=[('Pending', 'Pending'),('Paid', 'Paid'),('UnPaid', 'UnPaid')],default='Pending',null=True,blank=True)
 	approved_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_approved_by", blank=True, null=True)  
-	status = models.CharField(max_length=50,choices=[('Leave', 'Leave'), ('Permission', 'Permission'), ('Special Timesheet', 'Special Timesheet'), ('Task', 'Task'),('WFH', 'WFH')],default='Task',null=True,blank=True)
+	status = models.CharField(max_length=50,choices=[('Pending', 'Pending'),('Completed', 'Completed'),('Approved', 'Approved'),('Rejected', 'Rejected')],default='Pending',null=True,blank=True)
 	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
 	created_at = models.DateTimeField(auto_now_add=True,null=True, blank=True)
 	def __str__(self):
-		return self.timesheet
+		return self.id
 	
 class TimesheetDocument(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)

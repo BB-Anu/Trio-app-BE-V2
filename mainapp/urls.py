@@ -15,6 +15,7 @@ urlpatterns = [
 	path("triogroup/<pk>/", TRIOGroupRetrieveUpdateDestroyView.as_view(), name="triogroup-update"),
 	path("loancase/", LoanCaseListCreateView.as_view(), name="loancase-create"),
 	path("loancase/<pk>/", LoanCaseRetrieveUpdateDestroyView.as_view(), name="loancase-update"),
+	path("loancase_detail/<pk>/", LoanCaseDetailRetrieveUpdateDestroyView.as_view(), name="loancase-detail"),
 	path("projects/", ProjectsListCreateView.as_view(), name="projects-create"),
 	path("projects/<pk>/", ProjectsRetrieveUpdateDestroyView.as_view(), name="projects-update"),
 	path("documenttype/", DocumentTypeListCreateView.as_view(), name="documenttype-create"),

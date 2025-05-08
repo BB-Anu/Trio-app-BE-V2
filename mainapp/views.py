@@ -354,6 +354,25 @@ class LoanCaseRetrieveUpdateDestroyView(APIView):
             records.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
+    
+    
+class LoanCaseDetailRetrieveUpdateDestroyView(APIView):
+    def get(self, request, pk):
+        try:
+            case = LoanCase.objects.get(pk=pk)
+            docs = Document.objects.filter(case=pk)
+            assignment = TRIOAssignment.objects.get(case=pk)
+            timesheet = TaskTimesheet.objects.filter(case=pk)
+
+            return Response({
+                'case': LoanCaseSerializer(case).data,
+                'assignment': TRIOAssignmentSerializer(assignment).data,
+                'docs': DocumentSerializer(docs, many=True).data,
+                'timesheet': TaskTimesheetSerializer(timesheet, many=True).data,
+            })
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
 
 class ProjectsListCreateView(APIView):
     def get(self, request):
@@ -1534,7 +1553,7 @@ class TimesheetEntryListCreateView(APIView):
         total_existing_hours = TimesheetEntry.objects.filter(timesheet=timesheet).aggregate(
             total=models.Sum('hours'))['total'] or 0
 
-        remaining_hours = (timesheet.working_hours or 0) - total_existing_hours
+        remaining_hours = (timesheet.total_working_hours or 0) - total_existing_hours
 
         if new_hours > remaining_hours:
             return Response(
@@ -2460,10 +2479,10 @@ class template_task(APIView):
 class Dashboard(APIView):
     def get(self,request):
         try:
-            task_count = Task.objects.all().count()
-            assignment_count = TRIOAssignment.objects.all().count()
-            triogroup=TRIOGroup.objects.all().count()
-            case=LoanCase.objects.all().count()
+            task_count = Task.objects.filter(branch=request.user.branch.id).count()
+            assignment_count = TRIOAssignment.objects.filter(branch=request.user.branch.id).count()
+            triogroup=TRIOGroup.objects.filter(branch=request.user.branch.id).count()
+            case=LoanCase.objects.filter(branch=request.user.branch.id).count()
             return Response({
                 'task': task_count,
                 'assignment': assignment_count,
