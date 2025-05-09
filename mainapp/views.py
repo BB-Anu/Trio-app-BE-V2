@@ -362,12 +362,19 @@ class LoanCaseDetailRetrieveUpdateDestroyView(APIView):
             case = LoanCase.objects.get(pk=pk)
             docs = Document.objects.filter(case=pk)
             assignment = TRIOAssignment.objects.get(case=pk)
+            task = Task.objects.filter(assignment=assignment.pk).first()
+            if task:
+                due_date = task.due_date
+                print('---', due_date)   
+            else:
+                due_date = None         
             timesheet = TaskTimesheet.objects.filter(case=pk)
 
             return Response({
                 'case': LoanCaseSerializer(case).data,
                 'assignment': TRIOAssignmentSerializer(assignment).data,
                 'docs': DocumentSerializer(docs, many=True).data,
+                'due_date':due_date,
                 'timesheet': TaskTimesheetSerializer(timesheet, many=True).data,
             })
         except Exception as e:
@@ -688,6 +695,38 @@ class DocumentRejectListCreateView(APIView):
             return Response({'error': 'Document not found.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class TimesheetApproveListCreateView(APIView):
+    def put(self, request, pk):
+        try:
+            print('====',pk)
+            doc = TaskTimesheet.objects.get(pk=pk)
+            print('===',doc)
+            doc.status = 'approved'
+            doc.reject_reason=''
+            doc.save()
+            return Response({'message': 'Timesheet approved successfully.'}, status=status.HTTP_200_OK)
+        except Document.DoesNotExist:
+            return Response({'error': 'Timesheet not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class TimesheetRejectListCreateView(APIView):
+    def put(self, request, pk,reject_reason):
+        try:
+            print('==pk==',pk)
+            doc = TaskTimesheet.objects.get(pk=pk)
+            print('===',doc)
+            doc.status = 'rejected'
+            doc.reject_reason=reject_reason
+            doc.save()
+            return Response({'message': 'Timesheet approved successfully.'}, status=status.HTTP_200_OK)
+        except Document.DoesNotExist:
+            return Response({'error': 'Timesheet not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class ClientDocumentListCreateView(APIView):
     def get(self, request,case_id):
@@ -1529,6 +1568,14 @@ class TaskTimesheetRetrieveUpdateDestroyView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+class TaskTimesheetApprovalRetrieveUpdateDestroyView(APIView):
+    def get(self, request):
+        records = TaskTimesheet.objects.filter(status='completed')
+        print('---rec',records)
+        serializer = TaskTimesheetSerializer(records, many=True)
+        return Response(serializer.data)
+
+
 class TimesheetEntryListCreateView(APIView):
     def get(self, request):
         records = TimesheetEntry.objects.filter(branch=request.user.branch.id)
@@ -1544,9 +1591,10 @@ class TimesheetEntryListCreateView(APIView):
     def post(self, request):
         timesheet_id = request.data.get('timesheet')
         new_hours = float(request.data.get('hours', 0))
-
+        print('---',new_hours)
         try:
             timesheet = TaskTimesheet.objects.get(id=timesheet_id)
+           
         except TaskTimesheet.DoesNotExist:
             return Response({"error": "Timesheet not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -1560,15 +1608,14 @@ class TimesheetEntryListCreateView(APIView):
                 {"error": f"Only {remaining_hours} working hours are remaining for this timesheet."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
+        timesheet.total_working_hours = (total_existing_hours + new_hours)
+        timesheet.hours_spent=new_hours
+        timesheet.total_working_hours-=new_hours
+        timesheet.status='completed'
+        timesheet.save()
         serializer = TimesheetEntrySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-
-            # Update total_working_hours in TimeSheet
-            timesheet.total_working_hours = (total_existing_hours + new_hours)
-            timesheet.save()
-
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -2510,3 +2557,4 @@ class UserDashboard(APIView):
             })
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+

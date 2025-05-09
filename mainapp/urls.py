@@ -31,6 +31,9 @@ urlpatterns = [
 	path("document/", DocumentListCreateView.as_view(), name="document-create"),
     path("document_approve/<int:pk>/", DocumentApproveListCreateView.as_view(), name="document-approve"),
 	path("document_reject/<int:pk>/<str:reject_reason>/", DocumentRejectListCreateView.as_view(), name="document-reject"),
+    path("timesheet_approve/<int:pk>/", TimesheetApproveListCreateView.as_view(), name="timesheet-approve"),
+	path("timesheet_reject/<int:pk>/<str:reject_reason>/", TimesheetRejectListCreateView.as_view(), name="timesheet-reject"),
+
 	# path("document/", DocumentListCreateView.as_view(), name="document-create"),
 	path("client_document/<int:case_id>/", ClientDocumentListCreateView.as_view(), name="client-document-create"),
 	path("document/<pk>/", DocumentRetrieveUpdateDestroyView.as_view(), name="document-update"),
@@ -68,6 +71,7 @@ urlpatterns = [
 	path("taskdeliverable/<pk>/", TaskDeliverableRetrieveUpdateDestroyView.as_view(), name="taskdeliverable-update"),
 	path("tasktimesheet/", TaskTimesheetListCreateView.as_view(), name="tasktimesheet-create"),
 	path("tasktimesheet/<pk>/", TaskTimesheetRetrieveUpdateDestroyView.as_view(), name="tasktimesheet-update"),
+	path("tasktimesheet_approval/", TaskTimesheetApprovalRetrieveUpdateDestroyView.as_view(), name="tasktimesheet-approval"),
 	path("timesheetentry/", TimesheetEntryListCreateView.as_view(), name="timesheetentry-create"),
 	path("timesheetentry/<pk>/", TimesheetEntryRetrieveUpdateDestroyView.as_view(), name="timesheetentry-update"),
 	path("timesheetattachment/", TimesheetAttachmentListCreateView.as_view(), name="timesheetattachment-create"),
