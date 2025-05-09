@@ -213,11 +213,16 @@ def create_customdocument_entity(sender, instance, created, **kwargs):
 @receiver(post_save, sender=TimesheetEntry)
 def update_case_status_on_timesheet(sender, instance, created, **kwargs):
     if created:
-        try:
-            case = instance.timesheet.case
-            if case and case.status == 'info_gathering':
-                case.status = 'in_progress'
-                case.save()
-        except LoanCase.DoesNotExist:
-            pass
+        # Update TimesheetEntry status safely
+        instance.status = 'completed'
+        instance.save(update_fields=['status'])
+
+        # Update related LoanCase status
+        case = getattr(instance.timesheet, 'case', None)
+        if case and case.status == 'info_gathering':
+            case.status = 'in_progress'
+            case.save(update_fields=['status'])
+
         
+
+    

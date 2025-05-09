@@ -426,6 +426,7 @@ class TaskTimesheet(models.Model):
 	hours_spent = models.FloatField(default=0.0)
 	remarks = models.TextField(blank=True)
 	status=models.CharField(max_length=20,choices=[('pending','pending'),('completed','completed'),('approved','approved'),('rejected','rejected')],default='pending')
+	reject_reason=models.CharField(max_length=250,null=True,blank=True)
 	def __str__(self):
 		return str(self.id) 
 
