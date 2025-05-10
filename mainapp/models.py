@@ -383,11 +383,16 @@ class TRIOGroupMember(models.Model):
 class TRIOAssignment(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
 	# customer = models.ForeignKey(ClientProfile, on_delete=models.CASCADE)
-	case = models.ForeignKey(LoanCase, on_delete=models.CASCADE,blank=True,null=True,related_name='assignment')
+	case = models.ForeignKey(LoanCase, on_delete=models.CASCADE,blank=True,null=True,related_name='%(class)s_case')
 	group = models.ForeignKey(TRIOGroup, on_delete=models.CASCADE)
 	assigned_by = models.ForeignKey('user_management.User', on_delete=models.SET_NULL, null=True,related_name='assign_by')
 	assigned_to = models.ManyToManyField('user_management.User',related_name='assign_to')
 	assigned_on = models.DateTimeField(auto_now_add=True)
+	status = models.CharField(max_length=20, choices=[
+		('pending', 'Pending'),
+		('in_progress', 'In Progress'),
+		('completed', 'Completed')
+	], default='pending')
 	def __str__(self):
 		return f'{self.case}-{self.group}'
 
@@ -395,6 +400,7 @@ class Task(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
 	assignment = models.ForeignKey(TRIOAssignment, on_delete=models.CASCADE)
 	template = models.ForeignKey(TaskTemplate, on_delete=models.SET_NULL, null=True)
+	case = models.ForeignKey(LoanCase, on_delete=models.CASCADE,blank=True,null=True,related_name='assignment')
 	task_description=models.CharField(max_length=250,null=True,blank=True)
 	assigned_to = models.ForeignKey('TRIOProfile', on_delete=models.SET_NULL, null=True)
 	due_date = models.DateField()
@@ -558,15 +564,15 @@ class TimesheetEntry(models.Model):
 	hours = models.FloatField()
 	work_done = models.TextField()
 	uploaded_at = models.DateTimeField(auto_now_add=True)
-	document = models.BinaryField(blank=True, null=True)
+	document = models.FileField(upload_to="timesheet_documents/", validators=[FileExtensionValidator(allowed_extensions=["pdf", "doc", "docx"])], blank=True, null=True)
 	filename = models.CharField(max_length=255, blank=True, null=True) 
 	file_type = models.CharField(max_length=255, blank=True, null=True)  
-	attachment = models.BinaryField(blank=True, null=True)
+	attachment = models.FileField(upload_to="timesheet_attachemnts/", validators=[FileExtensionValidator(allowed_extensions=["pdf", "doc", "docx"])], blank=True, null=True)
 	attachment_name = models.CharField(max_length=255, blank=True, null=True)  
 	attachment_type = models.CharField(max_length=255, blank=True, null=True)
-	is_late_hours = models.BooleanField(default=False,blank=True, null=True)
-	is_wfh_hours = models.BooleanField(default=False,blank=True, null=True)
-	payment_status = models.CharField(max_length=50,choices=[('Pending', 'Pending'),('Paid', 'Paid'),('UnPaid', 'UnPaid')],default='Pending',null=True,blank=True)
+	# is_late_hours = models.BooleanField(default=False,blank=True, null=True)
+	# is_wfh_hours = models.BooleanField(default=False,blank=True, null=True)
+	# payment_status = models.CharField(max_length=50,choices=[('Pending', 'Pending'),('Paid', 'Paid'),('UnPaid', 'UnPaid')],default='Pending',null=True,blank=True)
 	approved_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_approved_by", blank=True, null=True)  
 	status = models.CharField(max_length=50,choices=[('Pending', 'Pending'),('Completed', 'Completed'),('Approved', 'Approved'),('Rejected', 'Rejected')],default='Pending',null=True,blank=True)
 	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  

@@ -701,11 +701,43 @@ class TimesheetApproveListCreateView(APIView):
     def put(self, request, pk):
         try:
             print('====',pk)
+            print('====',request.user.pk)
             doc = TaskTimesheet.objects.get(pk=pk)
             print('===',doc)
             doc.status = 'approved'
             doc.reject_reason=''
             doc.save()
+            print(doc.employee)
+            print(doc.employee.id)
+            try:
+                trio = TRIOProfile.objects.get(pk=doc.employee.id)
+                print('trio', trio)
+            except TRIOProfile.DoesNotExist:
+                print("TRIOProfile not found")
+                return Response({"error": "TRIO profile not found"}, status=404)
+
+            count = TaskTimesheet.objects.filter(case=doc.case, employee=trio, status='completed').count()
+            print('--', count)
+            task=Task.objects.get(case=doc.case,assigned_to=doc.employee.id)
+
+            if count == 0:
+                task.status='completed'
+            else:
+                task=Task.objects.get(case=doc.case,assigned_to=doc.employee.id)
+                task.status='in_progress'
+            task.save()
+            assignment=Task.objects.filter(case=doc.case,status='completed').count()
+            case_assign=TRIOAssignment.objects.get(case=doc.case)
+            if assignment== 0:
+                case_assign.status='completed'
+                case=LoanCase.objects.get(pk=doc.case)
+                case.status='review'
+                case.save()
+            else:
+                case_assign.status='in_progress'
+            case_assign.save()
+            
+
             return Response({'message': 'Timesheet approved successfully.'}, status=status.HTTP_200_OK)
         except Document.DoesNotExist:
             return Response({'error': 'Timesheet not found.'}, status=status.HTTP_404_NOT_FOUND)
@@ -1578,7 +1610,7 @@ class TaskTimesheetApprovalRetrieveUpdateDestroyView(APIView):
 
 class TimesheetEntryListCreateView(APIView):
     def get(self, request):
-        records = TimesheetEntry.objects.filter(branch=request.user.branch.id)
+        records = TimesheetEntry.objects.filter(branch=request.user.branch.id,created_by=request.user)
         serializer = TimesheetEntrySerializer(records, many=True)
         return Response(serializer.data)
 
@@ -2558,3 +2590,16 @@ class UserDashboard(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=500)
 
+class GetTask(APIView):
+    def get(self,request,case_id):
+        try:
+            print('---',case_id)
+            timesheet=TaskTimesheet.objects.get(id=case_id)
+            case=timesheet.case
+            user=UserProfile.objects.get(user=request.user)
+            trio=TRIOProfile.objects.get(user=user)
+            tasks=TaskTimesheet.objects.filter(case=case,employee=trio)
+            serializer=TaskTimesheetSerializer(tasks,many=True)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
