@@ -120,5 +120,8 @@ urlpatterns = [
 	path('folder/<str:entityId>/',folder.as_view(),name='folder'),
     path('tasktimesheet_hours/<pk>/',template_task.as_view(),name='tasktimesheet_hours'),
     path('dashboard/',Dashboard.as_view(),name='dashboard'),
-    path('user_dashboard/',UserDashboard.as_view(),name='user_dashboard')
+    path('user_dashboard/',UserDashboard.as_view(),name='user_dashboard'),
+    path('get_task/<int:case_id>/',GetTask.as_view(),name='get_task')
+    
+	
 ]

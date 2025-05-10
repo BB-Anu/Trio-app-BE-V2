@@ -118,6 +118,7 @@ def assign_case_based_on_enterprise_size(sender, instance, created, **kwargs):
                             Task.objects.create(
                                 branch=instance.branch,
                                 assignment=case_assignment,
+                                case=instance,
                                 template=template,
                                 assigned_to=trio_profile,
                                 due_date=due_date,
