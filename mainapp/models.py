@@ -158,6 +158,7 @@ class LoanCase(models.Model):
 	created_at = models.DateTimeField(auto_now=True)
 	start_date = models.DateTimeField(null=True,blank=True)
 	status = models.CharField(max_length=40, choices=[ ('new', 'New'),('info_gathering', 'Information Gathering'), ('in_progress', 'Under Analysis'), ('review', 'Under Review'),('rework', 'Rework'), ('approved', 'Approved'), ('declined', 'Declined'),  ('closed', 'Closed'),    ], default='new')
+	reject_reason=models.CharField(max_length=250,null=True,blank=True)
 	def save(self, *args, **kwargs):
 		if not self.case_id:
 			last_id = LoanCase.objects.aggregate(models.Max('id'))['id__max'] or 0
@@ -433,6 +434,7 @@ class TaskTimesheet(models.Model):
 	remarks = models.TextField(blank=True)
 	status=models.CharField(max_length=20,choices=[('pending','pending'),('completed','completed'),('approved','approved'),('rejected','rejected')],default='pending')
 	reject_reason=models.CharField(max_length=250,null=True,blank=True)
+	created_at=models.DateField(auto_now=True)
 	def __str__(self):
 		return str(self.id) 
 

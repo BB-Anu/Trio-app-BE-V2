@@ -33,6 +33,8 @@ urlpatterns = [
 	path("document_reject/<int:pk>/<str:reject_reason>/", DocumentRejectListCreateView.as_view(), name="document-reject"),
     path("timesheet_approve/<int:pk>/", TimesheetApproveListCreateView.as_view(), name="timesheet-approve"),
 	path("timesheet_reject/<int:pk>/<str:reject_reason>/", TimesheetRejectListCreateView.as_view(), name="timesheet-reject"),
+    path("loancase_approve/<int:pk>/", LoanCaseApproveListCreateView.as_view(), name="loancase-approve"),
+	path("loancase_reject/<int:pk>/<str:reject_reason>/", LoanCaseRejectListCreateView.as_view(), name="loancase-reject"),
 
 	# path("document/", DocumentListCreateView.as_view(), name="document-create"),
 	path("client_document/<int:case_id>/", ClientDocumentListCreateView.as_view(), name="client-document-create"),

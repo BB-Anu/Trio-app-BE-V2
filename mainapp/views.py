@@ -696,50 +696,52 @@ class DocumentRejectListCreateView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
 class TimesheetApproveListCreateView(APIView):
     def put(self, request, pk):
         try:
-            print('====',pk)
-            print('====',request.user.pk)
             doc = TaskTimesheet.objects.get(pk=pk)
-            print('===',doc)
             doc.status = 'approved'
-            doc.reject_reason=''
+            doc.reject_reason = ''
             doc.save()
-            print(doc.employee)
-            print(doc.employee.id)
+
             try:
                 trio = TRIOProfile.objects.get(pk=doc.employee.id)
-                print('trio', trio)
             except TRIOProfile.DoesNotExist:
-                print("TRIOProfile not found")
                 return Response({"error": "TRIO profile not found"}, status=404)
 
             count = TaskTimesheet.objects.filter(case=doc.case, employee=trio, status='completed').count()
-            print('--', count)
-            task=Task.objects.get(case=doc.case,assigned_to=doc.employee.id)
 
-            if count == 0:
-                task.status='completed'
-            else:
-                task=Task.objects.get(case=doc.case,assigned_to=doc.employee.id)
-                task.status='in_progress'
+            try:
+                task = Task.objects.get(case=doc.case, assigned_to=doc.employee.id)
+            except Task.DoesNotExist:
+                return Response({"error": "Related task not found"}, status=404)
+
+            task.status = 'completed' if count == 0 else 'in_progress'
             task.save()
-            assignment=Task.objects.filter(case=doc.case,status='completed').count()
-            case_assign=TRIOAssignment.objects.get(case=doc.case)
-            if assignment== 0:
-                case_assign.status='completed'
-                case=LoanCase.objects.get(pk=doc.case)
-                case.status='review'
-                case.save()
-            else:
-                case_assign.status='in_progress'
-            case_assign.save()
-            
+            print('case',doc.case.id)
+            completed_assignments = Task.objects.filter(case=doc.case, status='pending').count()
+
+            try:
+                case_assign = TRIOAssignment.objects.get(case_id=doc.case.id)
+                print('case_assign',case_assign)
+                case_assign.status = 'completed' if completed_assignments == 0 else 'in_progress'
+                case_assign.save()
+            except TRIOAssignment.DoesNotExist:
+                return Response({"error": "TRIO assignment not found"}, status=404)
+
+            pending_tasks = Task.objects.filter(case=doc.case, status='pending').count()
+
+            try:
+                loan_case = LoanCase.objects.get(pk=doc.case.id)
+                print('loan_case',loan_case)
+                loan_case.status = 'review' if pending_tasks == 0 else 'in_progress'
+                loan_case.save()
+            except LoanCase.DoesNotExist:
+                return Response({"error": "Loan case not found"}, status=404)
 
             return Response({'message': 'Timesheet approved successfully.'}, status=status.HTTP_200_OK)
-        except Document.DoesNotExist:
+
+        except TaskTimesheet.DoesNotExist:
             return Response({'error': 'Timesheet not found.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -756,6 +758,36 @@ class TimesheetRejectListCreateView(APIView):
             return Response({'message': 'Timesheet approved successfully.'}, status=status.HTTP_200_OK)
         except Document.DoesNotExist:
             return Response({'error': 'Timesheet not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class LoanCaseApproveListCreateView(APIView):
+    def put(self, request, pk):
+        try:
+            print('====',pk)
+            doc = LoanCase.objects.get(pk=pk)
+            print('===',doc)
+            doc.status = 'approved'
+            doc.reject_reason=''
+            doc.save()
+            return Response({'message': 'LoanCase approved successfully.'}, status=status.HTTP_200_OK)
+        except LoanCase.DoesNotExist:
+            return Response({'error': 'LoanCase not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class LoanCaseRejectListCreateView(APIView):
+    def put(self, request, pk,reject_reason):
+        try:
+            print('==pk==',pk)
+            doc = LoanCase.objects.get(pk=pk)
+            print('===',doc)
+            doc.status = 'rejected'
+            doc.reject_reason=reject_reason
+            doc.save()
+            return Response({'message': 'LoanCase approved successfully.'}, status=status.HTTP_200_OK)
+        except LoanCase.DoesNotExist:
+            return Response({'error': 'LoanCase not found.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -2556,21 +2588,37 @@ class template_task(APIView):
                 return Response({"error": str(e)}, status=500)
 
 class Dashboard(APIView):
-    def get(self,request):
+    def get(self, request):
         try:
-            task_count = Task.objects.filter(branch=request.user.branch.id).count()
-            assignment_count = TRIOAssignment.objects.filter(branch=request.user.branch.id).count()
-            triogroup=TRIOGroup.objects.filter(branch=request.user.branch.id).count()
-            case=LoanCase.objects.filter(branch=request.user.branch.id).count()
+            print('--',request.user)
+            branch_id = request.user.branch.id
+            task_count = Task.objects.filter(branch=branch_id).count()
+            assignment_count = TRIOAssignment.objects.filter(branch=branch_id).count()
+            triogroup = TRIOGroup.objects.filter(branch=branch_id).count()
+            case = LoanCase.objects.filter(branch=branch_id).count()
+            recent_tasks = LoanCase.objects.filter(branch=branch_id).order_by('-created_at')[:5]
+            serialized_tasks = LoanCaseSerializer(recent_tasks, many=True).data
+            assignments = TRIOAssignment.objects.filter(branch=branch_id).order_by('-assigned_on')[:10]
+            serialized_assignments = TRIOAssignmentSerializer(assignments, many=True).data
+            timesheet=TaskTimesheet.objects.filter(branch=branch_id).count()
+            pending_timesheet=TaskTimesheet.objects.filter(branch=branch_id,status='pending').count()
+            approved_timesheet=TaskTimesheet.objects.filter(branch=branch_id,status='approved').count()
+            rejected_timesheet=TaskTimesheet.objects.filter(branch=branch_id,status='rejected').count()
+            assignment_count = TRIOAssignment.objects.all().count()
             return Response({
                 'task': task_count,
                 'assignment': assignment_count,
-                'group':triogroup,
-                'case':case
+                'group': triogroup,
+                'case': case,
+                'recent_tasks': serialized_tasks,
+                'assignments':serialized_assignments,
+                'timesheet':timesheet,
+                'pending_timesheet':pending_timesheet,
+                'approved_timesheet':approved_timesheet,
+                'rejected_timesheet':rejected_timesheet
             })
         except Exception as e:
             return Response({"error": str(e)}, status=500)
-
 
 class UserDashboard(APIView):
     def get(self,request):
@@ -2580,12 +2628,18 @@ class UserDashboard(APIView):
             task_count = Task.objects.filter(assigned_to=user).count()
             print('---task_count',task_count)
             timesheet=TaskTimesheet.objects.filter(employee=user).count()
-
-            assignment_count = TRIOAssignment.objects.all().count()
+            pending_timesheet=TaskTimesheet.objects.filter(employee=user,status='pending').count()
+            approved_timesheet=TaskTimesheet.objects.filter(employee=user,status='approved').count()
+            rejected_timesheet=TaskTimesheet.objects.filter(employee=user,status='rejected').count()
+            tasks=TaskTimesheet.objects.filter(employee=user).order_by('-created_at')[:10]
+            recent_task=TaskTimesheetSerializer(tasks,many=True).data
             return Response({
                 'task': task_count,
-                'assignment': assignment_count,
                 'timesheet':timesheet,
+                'pending_timesheet':pending_timesheet,
+                'approved_timesheet':approved_timesheet,
+                'rejected_timesheet':rejected_timesheet,
+                'recent_task':recent_task
             })
         except Exception as e:
             return Response({"error": str(e)}, status=500)
