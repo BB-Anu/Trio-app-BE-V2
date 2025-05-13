@@ -123,7 +123,7 @@ urlpatterns = [
     path('tasktimesheet_hours/<pk>/',template_task.as_view(),name='tasktimesheet_hours'),
     path('dashboard/',Dashboard.as_view(),name='dashboard'),
     path('user_dashboard/',UserDashboard.as_view(),name='user_dashboard'),
-    path('get_task/<int:case_id>/',GetTask.as_view(),name='get_task')
-    
-	
+    path('get_task/<int:case_id>/',GetTask.as_view(),name='get_task'),
+    path('timesheets_report/<str:date>/',TimesheetsReport.as_view(),name='timesheets_report'),
+    path('loancase_report/<str:date>/',CaseReport.as_view(),name='loancase_report')
 ]
