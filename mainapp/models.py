@@ -405,6 +405,7 @@ class Task(models.Model):
 	task_description=models.CharField(max_length=250,null=True,blank=True)
 	assigned_to = models.ForeignKey('TRIOProfile', on_delete=models.SET_NULL, null=True)
 	due_date = models.DateField()
+	created_at=models.DateField(auto_now=True)
 	status = models.CharField(max_length=20, choices=[
 		('pending', 'Pending'),
 		('in_progress', 'In Progress'),

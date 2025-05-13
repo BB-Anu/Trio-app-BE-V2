@@ -1,3 +1,4 @@
+from datetime import timezone
 from django.shortcuts import render,redirect,get_object_or_404
 from django.views.generic import ListView, UpdateView, CreateView, DetailView
 from django.db.models import Q
@@ -764,12 +765,23 @@ class TimesheetRejectListCreateView(APIView):
 class LoanCaseApproveListCreateView(APIView):
     def put(self, request, pk):
         try:
-            print('====',pk)
-            doc = LoanCase.objects.get(pk=pk)
-            print('===',doc)
-            doc.status = 'approved'
-            doc.reject_reason=''
-            doc.save()
+            print('====', pk) 
+            doc = LoanCase.objects.get(pk=pk) 
+            print('===', doc)
+
+            doc.status = 'approved'  
+            doc.reject_reason = ''   
+            doc.save()               
+
+            assignment = get_object_or_404(TRIOAssignment, case=doc.id)  
+            print('assignment', assignment.group)
+
+            group = get_object_or_404(TRIOGroup, pk=assignment.group.id)  
+            print('group', group)
+
+            group.is_available = True  
+            group.save()              
+
             return Response({'message': 'LoanCase approved successfully.'}, status=status.HTTP_200_OK)
         except LoanCase.DoesNotExist:
             return Response({'error': 'LoanCase not found.'}, status=status.HTTP_404_NOT_FOUND)
@@ -2626,20 +2638,23 @@ class UserDashboard(APIView):
             print('---',request.user.id)
             user=TRIOProfile.objects.get(user__user=request.user.id)
             task_count = Task.objects.filter(assigned_to=user).count()
-            print('---task_count',task_count)
             timesheet=TaskTimesheet.objects.filter(employee=user).count()
             pending_timesheet=TaskTimesheet.objects.filter(employee=user,status='pending').count()
             approved_timesheet=TaskTimesheet.objects.filter(employee=user,status='approved').count()
             rejected_timesheet=TaskTimesheet.objects.filter(employee=user,status='rejected').count()
             tasks=TaskTimesheet.objects.filter(employee=user).order_by('-created_at')[:10]
             recent_task=TaskTimesheetSerializer(tasks,many=True).data
+            timesheets=Task.objects.filter(assigned_to=user).order_by('-created_at')[:10]
+            recent_timesheets=TaskSerializer(timesheets,many=True).data
+            print('--',recent_timesheets)
             return Response({
                 'task': task_count,
                 'timesheet':timesheet,
                 'pending_timesheet':pending_timesheet,
                 'approved_timesheet':approved_timesheet,
                 'rejected_timesheet':rejected_timesheet,
-                'recent_task':recent_task
+                'recent_task':recent_task,
+                'recent_timesheets':recent_timesheets
             })
         except Exception as e:
             return Response({"error": str(e)}, status=500)
@@ -2655,5 +2670,45 @@ class GetTask(APIView):
             tasks=TaskTimesheet.objects.filter(case=case,employee=trio)
             serializer=TaskTimesheetSerializer(tasks,many=True)
             return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+        
+class TimesheetsReport(APIView):
+    def get(self, request, date=None):
+        try:
+            status_param = request.GET.get('status')  # Optional status filter
+            print('--- Date:', date, 'Status:', status_param)
+            if date:
+                timesheets = TaskTimesheet.objects.filter(created_at=date)
+            if status_param and date:
+                timesheets = TaskTimesheet.objects.filter(created_at=date,status=status_param)
+            else:
+                timesheets = TaskTimesheet.objects.filter(created_at=timezone.now().date())
+
+
+            print('-- Filtered Timesheets:', timesheets)
+            serializer = TaskTimesheetSerializer(timesheets, many=True)
+            return Response(serializer.data, status=200)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+        
+
+
+class CaseReport(APIView):
+    def get(self, request, date=None):
+        try:
+            print('--', date)
+            if date:
+                date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+            else:
+                date_obj = timezone.now().date()
+
+            loancase = LoanCase.objects.filter(created_at__date=date_obj)
+
+            print('-- Filtered:', loancase)
+            serializer = LoanCaseSerializer(loancase, many=True)
+            return Response(serializer.data, status=200)
+
         except Exception as e:
             return Response({"error": str(e)}, status=500)
