@@ -52,7 +52,7 @@ class ClientProfile(models.Model):
 		('MEDIUM', 'Medium Enterprise'),
 	]
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
-	user = models.OneToOneField('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_user")
+	user = models.OneToOneField(UserProfile, on_delete=models.CASCADE, related_name="%(class)s_user")
 	business_name = models.CharField(max_length=250,)
 	business_type = models.CharField(max_length=250,)
 	registration_number = models.CharField(max_length=250,)
@@ -80,7 +80,7 @@ class ClientProfile(models.Model):
 
 class AuditorProfile(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
-	user = models.OneToOneField('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_user")
+	user = models.OneToOneField(UserProfile, on_delete=models.CASCADE, related_name="%(class)s_user_profile")
 	firm_name = models.CharField(max_length=250,)
 	license_number = models.CharField(max_length=250,)
 	years_of_experience = models.PositiveIntegerField()
@@ -97,7 +97,7 @@ class AuditorProfile(models.Model):
 
 class MarketingAgentProfile(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
-	user = models.OneToOneField('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_user")
+	user = models.OneToOneField(UserProfile, on_delete=models.CASCADE, related_name="%(class)s_user")
 	agency_name = models.CharField(max_length=250,blank=True, null=True ,)
 	expertise_area = models.CharField(max_length=250,)
 	years_of_experience = models.PositiveIntegerField()
@@ -105,14 +105,14 @@ class MarketingAgentProfile(models.Model):
 	contact_phone = models.CharField(max_length=250,)
 	contact_email = models.EmailField()
 	address = models.TextField()
-	has_ndasigned = models.BooleanField()
+	# has_ndasigned = models.BooleanField()
 	available_for_assignment = models.BooleanField()
 	def __str__(self):
 		return self.agency_name
 
 class LawyerProfile(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
-	user = models.OneToOneField('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_user")
+	user = models.OneToOneField(UserProfile, on_delete=models.CASCADE, related_name="%(class)s_user")
 	law_firm = models.CharField(max_length=250,)
 	bar_registration_number = models.CharField(max_length=250,)
 	specialization_area = models.CharField(max_length=250,)

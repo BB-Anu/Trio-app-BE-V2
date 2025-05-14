@@ -73,7 +73,7 @@ class Role(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=250,blank=True, null=True ,)
     description = models.TextField(blank=True, null=True,)
-    permissions = models.ManyToManyField(Function,related_name='roles')
+    permissions = models.ManyToManyField(Function,related_name='roles',null=True)
     created_by = models.ForeignKey('User', on_delete=models.CASCADE,blank=True, null=True,related_name="role_created_by")
     created_at = models.DateTimeField(auto_now=True)
     update_by = models.ForeignKey('User', on_delete=models.CASCADE, blank=True, null=True,related_name="role_update_by")

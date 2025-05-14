@@ -28,10 +28,10 @@ class ClientProfileSerializer(serializers.ModelSerializer):
         fields = "__all__"
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        if instance.user.id and instance.user.first_name:
+        if instance.user.user.id and instance.user.user.first_name:
             rep["user"] = {
-                'id': str(instance.user.id),
-                'name': instance.user.first_name
+                'id': str(instance.user.user.id),
+                'name': instance.user.user.first_name
             }
         else:
             rep["user"] = None
@@ -378,11 +378,24 @@ class AuditorProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditorProfile
         fields = "__all__"
-
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        try:
+            rep["user"] = instance.user.user.first_name
+        except AttributeError:
+            rep["user"] = None
+        return rep
 class MarketingAgentProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = MarketingAgentProfile
         fields = "__all__"
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        try:
+            rep["user"] = instance.user.user.first_name
+        except AttributeError:
+            rep["user"] = None
+        return rep
 
 class IssueReportSerializer(serializers.ModelSerializer):
     class Meta:
@@ -398,6 +411,13 @@ class LawyerProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = LawyerProfile
         fields = "__all__"
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        try:
+            rep["user"] = instance.user.user.first_name
+        except AttributeError:
+            rep["user"] = None
+        return rep
 
 class MembersSerializer(serializers.ModelSerializer):
     class Meta:
