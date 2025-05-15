@@ -125,5 +125,6 @@ urlpatterns = [
     path('user_dashboard/',UserDashboard.as_view(),name='user_dashboard'),
     path('get_task/<int:case_id>/',GetTask.as_view(),name='get_task'),
     path('timesheets_report/<str:date>/',TimesheetsReport.as_view(),name='timesheets_report'),
-    path('loancase_report/<str:date>/',CaseReport.as_view(),name='loancase_report')
+    path('loancase_report/<str:date>/',CaseReport.as_view(),name='loancase_report'),
+    path('case_dcoument/',CaseDocument.as_view(),name='case_dcoument')
 ]
