@@ -1986,6 +1986,7 @@ class AuditorProfileListCreateView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        print(request.data)
         serializer = AuditorProfileSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -2164,7 +2165,9 @@ class LawyerProfileListCreateView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        print(request.data)
         serializer = LawyerProfileSerializer(data=request.data)
+        print('--',serializer.is_valid())
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -2179,6 +2182,7 @@ class LawyerProfileRetrieveUpdateDestroyView(APIView):
             return None
 
     def get(self, request, pk):
+        print(request.data)
         records = self.get_object(pk)
         if records:
             serializer = LawyerProfileSerializer(records)
@@ -2483,20 +2487,26 @@ class TemplateDocumentRetriveUpdateDestroyView(APIView):
 class AuditorUser(APIView):
     def get(self, request):
         try:
-            users=User.objects.filter(roles__name='Auditor',branch=request.user.branch.id)
-            print('---',users)
-            serializer = UserSerializer(users, many=True)
+            users = UserProfile.objects.filter(
+                user__roles__name='Auditor',
+                user__branch=request.user.branch,profile_completed=True
+            )
+            print('---', users)
+            serializer = UserProfileSerializer(users, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
-            return Response({"error": str(e)}, status=500)
+            return Response({'error': str(e)}, status=500)
 
 
 class ClientUser(APIView):
     def get(self, request):
         try:
-            users=User.objects.filter(roles__name='customer',branch=request.user.branch.id)
+            users = UserProfile.objects.filter(
+                user__roles__name='customer',
+                user__branch=request.user.branch,profile_completed=True
+            )                
             print('---',users)
-            serializer = UserSerializer(users, many=True)
+            serializer = UserProfileSerializer(users, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
@@ -2505,9 +2515,12 @@ class ClientUser(APIView):
 class AgentUser(APIView):
     def get(self, request):
         try:
-            users=User.objects.filter(roles__name='Marketing Agent',branch=request.user.branch.id,available_for_assignment=True)
+            users = UserProfile.objects.filter(
+                user__roles__name='Marketing Agent',
+                user__branch=request.user.branch,profile_completed=True
+            )             
             print('---',users)
-            serializer = UserSerializer(users, many=True)
+            serializer = UserProfileSerializer(users, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
@@ -2516,9 +2529,12 @@ class AgentUser(APIView):
 class LawyerUser(APIView):
     def get(self, request):
         try:
-            users=User.objects.filter(roles__name='Lawyer',branch=request.user.branch.id)
+            users = UserProfile.objects.filter(
+                user__roles__name='Lawyer',
+                user__branch=request.user.branch,profile_completed=True
+            )            
             print('---',users)
-            serializer = UserSerializer(users, many=True)
+            serializer = UserProfileSerializer(users, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
@@ -2529,7 +2545,7 @@ class TrioUser(APIView):
         try:
             print('---',request.user)
             users = UserProfile.objects.filter(
-                ~Q(user__roles__name='Customer'),
+                ~Q(user__roles__name='customer'),
                 branch=request.user.branch.id,profile_completed=True
             )
             print('---',users)
