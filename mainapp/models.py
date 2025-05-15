@@ -1,8 +1,9 @@
 from django.core.validators import MinValueValidator,FileExtensionValidator,MaxValueValidator
 from django.db import models
-from datetime import datetime
+from datetime import datetime, timezone
 from django.utils.timezone import now
 from user_management.models import Branch
+from django.utils import timezone
 
 class Screen(models.Model):
     screen_name = models.CharField(max_length=100)
@@ -64,6 +65,8 @@ class ClientProfile(models.Model):
 	number_of_employees = models.PositiveIntegerField(null=True, blank=True)
 	annual_turnover = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
 	enterprise_size = models.CharField(max_length=10, choices=ENTERPRISE_SIZE_CHOICES, null=True, blank=True)
+	has_existing_loan = models.BooleanField(default=False)
+
 	def save(self, *args, **kwargs):
 		if self.number_of_employees is not None:
 			if self.number_of_employees <= 10:
@@ -412,8 +415,7 @@ class Task(models.Model):
 		('completed', 'Completed')
 	], default='pending')
 	def __str__(self):
-		return f"Task for {self.assignment.customer.business_name} (Assigned to {self.assigned_to.user})"
-	
+		return f"Task for {self.assignment} (Assigned to {self.assigned_to})"
 
 class TaskDeliverable(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
@@ -433,7 +435,7 @@ class TaskTimesheet(models.Model):
 	total_working_hours = models.FloatField(null=True,blank=True)
 	hours_spent = models.FloatField(default=0.0)
 	remarks = models.TextField(blank=True)
-	status=models.CharField(max_length=20,choices=[('pending','pending'),('completed','completed'),('approved','approved'),('rejected','rejected')],default='pending')
+	status=models.CharField(max_length=20,choices=[('pending','pending'),('overdue','overdue'),('completed','completed'),('approved','approved'),('rejected','rejected')],default='pending')
 	reject_reason=models.CharField(max_length=250,null=True,blank=True)
 	created_at=models.DateField(auto_now=True)
 	def __str__(self):

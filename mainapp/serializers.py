@@ -78,7 +78,7 @@ class LoanCaseSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         try:
-            rep["client"] = instance.client.user.first_name
+            rep["client"] = instance.client.user.user.first_name
         except AttributeError:
             rep["client"] = None
         return rep
@@ -103,8 +103,8 @@ class FolderMasterSerializer(serializers.ModelSerializer):
         rep= super().to_representation(instance)
         if instance.client:
             rep['client']={
-                'id':str(instance.client.user.id),
-                'name':str(instance.client.user.first_name)
+                'id':str(instance.client.user.user.id),
+                'name':str(instance.client.user.user.first_name)
             }
         else:
             rep['client']=None

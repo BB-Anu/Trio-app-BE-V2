@@ -361,6 +361,7 @@ class LoanCaseDetailRetrieveUpdateDestroyView(APIView):
     def get(self, request, pk):
         try:
             case = LoanCase.objects.get(pk=pk)
+            client=ClientProfile.objects.get(pk=case.client)
             docs = Document.objects.filter(case=pk)
             assignment = TRIOAssignment.objects.get(case=pk)
             task = Task.objects.filter(assignment=assignment.pk).first()
@@ -375,6 +376,7 @@ class LoanCaseDetailRetrieveUpdateDestroyView(APIView):
                 'case': LoanCaseSerializer(case).data,
                 'assignment': TRIOAssignmentSerializer(assignment).data,
                 'docs': DocumentSerializer(docs, many=True).data,
+                'client':ClientProfileSerializer(client).data,
                 'due_date':due_date,
                 'timesheet': TaskTimesheetSerializer(timesheet, many=True).data,
             })
@@ -772,7 +774,11 @@ class LoanCaseApproveListCreateView(APIView):
             doc.status = 'approved'  
             doc.reject_reason = ''   
             doc.save()               
-
+            
+            client = get_object_or_404(ClientProfile,pk=doc.client)
+            client.has_existing_loan=True
+            client.save()
+            
             assignment = get_object_or_404(TRIOAssignment, case=doc.id)  
             print('assignment', assignment.group)
 
@@ -1667,28 +1673,36 @@ class TimesheetEntryListCreateView(APIView):
     def post(self, request):
         timesheet_id = request.data.get('timesheet')
         new_hours = float(request.data.get('hours', 0))
-        print('---',new_hours)
+        print('New hours:', new_hours)
+
         try:
             timesheet = TaskTimesheet.objects.get(id=timesheet_id)
-           
         except TaskTimesheet.DoesNotExist:
             return Response({"error": "Timesheet not found."}, status=status.HTTP_404_NOT_FOUND)
 
+        # Total hours already logged
         total_existing_hours = TimesheetEntry.objects.filter(timesheet=timesheet).aggregate(
             total=models.Sum('hours'))['total'] or 0
+        print('Total existing hours:', total_existing_hours)
 
-        remaining_hours = (timesheet.total_working_hours or 0) - total_existing_hours
+        remaining_hours = (timesheet.total_working_hours or 0) 
 
         if new_hours > remaining_hours:
             return Response(
                 {"error": f"Only {remaining_hours} working hours are remaining for this timesheet."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        timesheet.total_working_hours = (total_existing_hours + new_hours)
-        timesheet.hours_spent=new_hours
+        remaining_hours-= total_existing_hours
+        print('Remaining hours:', remaining_hours)
+        # Update total spent hours (optional)
+        timesheet.hours_spent +=  new_hours
         timesheet.total_working_hours-=new_hours
-        timesheet.status='completed'
+        # If fully used, mark completed
+        # if timesheet.hours_spent == timesheet.total_working_hours:
+        #     timesheet.status = 'completed'
         timesheet.save()
+
+        # Save the entry
         serializer = TimesheetEntrySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -1730,9 +1744,8 @@ class TimesheetEntryRetrieveUpdateDestroyView(APIView):
         total_existing_hours = TimesheetEntry.objects.filter(
             timesheet=timesheet
         ).exclude(id=instance.id).aggregate(total=models.Sum('hours'))['total'] or 0
-
-        remaining_hours = (timesheet.working_hours or 0) - total_existing_hours
-
+        remaining_hours = (timesheet.total_working_hours or 0) - total_existing_hours
+    
         if new_hours > remaining_hours:
             return Response(
                 {"error": f"Only {remaining_hours} working hours are remaining for this timesheet."},
@@ -1744,7 +1757,7 @@ class TimesheetEntryRetrieveUpdateDestroyView(APIView):
             serializer.save()
 
             # Update total_working_hours in TimeSheet
-            timesheet.total_working_hours = total_existing_hours + new_hours
+            timesheet.total_working_hours = total_existing_hours - new_hours
             timesheet.save()
 
             return Response(serializer.data)
@@ -2726,5 +2739,19 @@ class CaseReport(APIView):
             serializer = LoanCaseSerializer(loancase, many=True)
             return Response(serializer.data, status=200)
 
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+class CaseDocument(APIView):
+    def get(self,request):
+        try:
+            print('---',request.user)
+            assignment=TRIOAssignment.objects.get(assigned_to=request.user.id)
+            print('assignment',assignment.case.id)
+            records=LoanCase.objects.filter(pk=assignment.case.id)
+            print('records',records)
+            serializer=LoanCaseSerializer(records,many=True)
+            print('serializer',serializer)
+            return Response(serializer.data, status=200)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
