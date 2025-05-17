@@ -85,6 +85,15 @@ class ClientProfileListCreateView(APIView):
         serializer = ClientProfileSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            print('serializer.data',serializer.data)
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Created client profile: {serializer.data.get('business_name', '')}",
+        screen_name='client profile',
+    )   
+            print('log',audit_log)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -109,15 +118,33 @@ class ClientProfileRetrieveUpdateDestroyView(APIView):
             serializer = ClientProfileSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+                branch = instance.branch ,
+                user_id=request.user.pk,
+                action=f"Updated client profile: {serializer.data.get('business_name', '')}",
+                screen_name='client profile',
+            )   
                 return Response(serializer.data)
+            print('serializer.errors',serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     def delete(self, request, pk):
         print(pk)
+        print('---------------',request.user.branch.id)
         records = self.get_object(pk)
         if records:
+            business_name = records.business_name  
+            branch = records.branch  
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=branch,
+            user_id=request.user.pk,
+            action=f"Deleted client profile: {business_name}",
+            screen_name='client profile',
+        )
+            print('AuditLog',audit_log)
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -131,6 +158,13 @@ class DocumentGroupListCreateView(APIView):
         serializer = DocumentGroupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+                branch = instance.branch ,
+                user_id=request.user.pk,
+                action=f"Created Document",
+                screen_name='Document',
+            )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -154,6 +188,13 @@ class DocumentGroupRetrieveUpdateDestroyView(APIView):
             serializer = DocumentGroupSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+                branch = instance.branch ,
+                user_id=request.user.pk,
+                action=f"Updated Document",
+                screen_name='Document',
+            )   
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -162,6 +203,12 @@ class DocumentGroupRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+                branch = records.branch ,
+                user_id=request.user.pk,
+                action=f"Deleted Document",
+                screen_name='Document',
+            )   
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -175,6 +222,13 @@ class CustomDocumentEntityListCreateView(APIView):
         serializer = CustomDocumentEntitySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Created {serializer.data.get('entity_name','')} ",
+        screen_name='Custom Document Entity',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -198,6 +252,13 @@ class CustomDocumentEntityRetrieveUpdateDestroyView(APIView):
             serializer = CustomDocumentEntitySerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated {serializer.data.get('entity_name','')} ",
+        screen_name='Custom Document Entity',
+    )   
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -206,6 +267,12 @@ class CustomDocumentEntityRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted Custom Entity",
+            screen_name='Custom Entity',
+        )
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -229,6 +296,14 @@ class TaskTemplateListCreateView(APIView):
         serializer = TaskTemplateSerializer(data=complete_data)
         if serializer.is_valid():
             serializer.save()
+            print('serializer.data',serializer.data)
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Created Task Template: {serializer.data.get('title', '')}",
+        screen_name='Task Template',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -253,6 +328,14 @@ class TaskTemplateRetrieveUpdateDestroyView(APIView):
             serializer = TaskTemplateSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated Task Template: {serializer.data.get('title', '')}",
+        screen_name='Task Template',
+    )   
+
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -261,6 +344,13 @@ class TaskTemplateRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Task Teemplate Entity",
+            screen_name='Task Template',
+        )
+
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -277,6 +367,13 @@ class TRIOGroupListCreateView(APIView):
         serializer = TRIOGroupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Created Trio Group: {serializer.data.get('name', '')}",
+        screen_name='Trio Group',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -300,6 +397,13 @@ class TRIOGroupRetrieveUpdateDestroyView(APIView):
             serializer = TRIOGroupSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated Trio Group: {serializer.data.get('name', '')}",
+        screen_name='Trio Group',
+    )   
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -307,13 +411,21 @@ class TRIOGroupRetrieveUpdateDestroyView(APIView):
     def delete(self, request, pk):
         records = self.get_object(pk)
         if records:
+            group=records.name
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted Trio Group {group}",
+            screen_name='Trio Group',
+        )
+
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 class LoanCaseListCreateView(APIView):
     def get(self, request):
-        records = LoanCase.objects.filter(branch=request.user.branch.id)
+        records = LoanCase.objects.filter(branch=request.user.branch.id).exclude(status='approved')
         serializer = LoanCaseSerializer(records, many=True)
         return Response(serializer.data)
 
@@ -321,9 +433,22 @@ class LoanCaseListCreateView(APIView):
         serializer = LoanCaseSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=instance.created_by,
+        action=f"Created Loancase: {serializer.data.get('case', '')}",
+        screen_name='Loan Case',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ApprovedLoanCaseListCreateView(APIView):
+    def get(self, request):
+        records = LoanCase.objects.filter(branch=request.user.branch.id,status='approved')
+        serializer = LoanCaseSerializer(records, many=True)
+        return Response(serializer.data)
 
 class LoanCaseRetrieveUpdateDestroyView(APIView):
     def get_object(self, pk):
@@ -345,6 +470,13 @@ class LoanCaseRetrieveUpdateDestroyView(APIView):
             serializer = LoanCaseSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated Loancase: {serializer.data.get('case', '')}",
+        screen_name='Loan Case',
+    )   
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -352,7 +484,16 @@ class LoanCaseRetrieveUpdateDestroyView(APIView):
     def delete(self, request, pk):
         records = self.get_object(pk)
         if records:
+            case=records.case
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted Loancase {case}",
+            screen_name='Loan Case',
+        )
+
+
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
     
@@ -361,7 +502,9 @@ class LoanCaseDetailRetrieveUpdateDestroyView(APIView):
     def get(self, request, pk):
         try:
             case = LoanCase.objects.get(pk=pk)
-            client=ClientProfile.objects.get(pk=case.client)
+            print('case',case)
+            client=ClientProfile.objects.get(pk=case.client.id)
+            print('client',client)
             docs = Document.objects.filter(case=pk)
             assignment = TRIOAssignment.objects.get(case=pk)
             task = Task.objects.filter(assignment=assignment.pk).first()
@@ -394,6 +537,7 @@ class ProjectsListCreateView(APIView):
         serializer = ProjectsSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -425,6 +569,7 @@ class ProjectsRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+    
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -482,6 +627,14 @@ class FolderMasterListCreateView(APIView):
         serializer = FolderMasterSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=instance.created_by,
+        action=f"Created Folder Master: {serializer.data.get('folder_name', '')}",
+        screen_name='Folder Master',
+    )   
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -506,6 +659,13 @@ class FolderMasterRetrieveUpdateDestroyView(APIView):
             serializer = FolderMasterSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated Folder Master: {serializer.data.get('folder_name', '')}",
+        screen_name='Folder Master',
+    )   
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -514,6 +674,13 @@ class FolderMasterRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted Folder <aster",
+            screen_name='Folder Master',
+        )
+
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -527,6 +694,13 @@ class TRIOAssignmentListCreateView(APIView):
         serializer = TRIOAssignmentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Created Trio Assignment",
+        screen_name='Trio Assignment',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -550,6 +724,13 @@ class TRIOAssignmentRetrieveUpdateDestroyView(APIView):
             serializer = TRIOAssignmentSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated Trio Assignment",
+        screen_name='Trio Assignment',
+    )   
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -558,6 +739,13 @@ class TRIOAssignmentRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted TRIO Assignment",
+            screen_name='TRIO Assignment',
+        )
+
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -664,6 +852,13 @@ class DocumentListCreateView(APIView):
         serializer = DocumentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Created Document",
+        screen_name='Document',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         print('-------',serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -699,6 +894,39 @@ class DocumentRejectListCreateView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+class TimesheetEntryApproveListCreateView(APIView):
+    def put(self, request, pk):
+        try:
+            print('====',pk)
+            doc = TimesheetEntry.objects.get(pk=pk)
+            print('===',doc)
+            doc.status = 'approved'
+            doc.approved_by = request.user
+            doc.reject_reason=''
+            doc.save()
+            return Response({'message': 'TimesheetEntry approved successfully.'}, status=status.HTTP_200_OK)
+        except TimesheetEntry.DoesNotExist:
+            return Response({'error': 'TimesheetEntry not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class TimesheetEntryRejectListCreateView(APIView):
+    def put(self, request, pk,reject_reason):
+        try:
+            print('==pk==',pk)
+            doc = TimesheetEntry.objects.get(pk=pk)
+            print('===',doc)
+            doc.status = 'rejected'
+            doc.reject_reason=reject_reason
+            doc.save()
+            return Response({'message': 'TimesheetEntry approved successfully.'}, status=status.HTTP_200_OK)
+        except TimesheetEntry.DoesNotExist:
+            return Response({'error': 'TimesheetEntry not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class TimesheetApproveListCreateView(APIView):
     def put(self, request, pk):
         try:
@@ -712,14 +940,15 @@ class TimesheetApproveListCreateView(APIView):
             except TRIOProfile.DoesNotExist:
                 return Response({"error": "TRIO profile not found"}, status=404)
 
-            count = TaskTimesheet.objects.filter(case=doc.case, employee=trio, status='completed').count()
+            count = TaskTimesheet.objects.filter(case=doc.case, employee=trio, status='approved').count()
+            task_count = TaskTimesheet.objects.filter(case=doc.case, employee=trio).count()
 
             try:
                 task = Task.objects.get(case=doc.case, assigned_to=doc.employee.id)
             except Task.DoesNotExist:
                 return Response({"error": "Related task not found"}, status=404)
 
-            task.status = 'completed' if count == 0 else 'in_progress'
+            task.status = 'completed' if count == task_count else 'in_progress'
             task.save()
             print('case',doc.case.id)
             completed_assignments = Task.objects.filter(case=doc.case, status='pending').count()
@@ -859,6 +1088,12 @@ class DocumentRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted Document",
+            screen_name='Document',
+        )
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -962,6 +1197,13 @@ class TimeSheetListCreateView(APIView):
         serializer = TimeSheetSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Created  ",
+        screen_name='Timehseet',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         print('serializer.errors',serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -986,6 +1228,13 @@ class TimeSheetRetrieveUpdateDestroyView(APIView):
             serializer = TimeSheetSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated  ",
+        screen_name='Timehseet',
+    )   
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -994,6 +1243,12 @@ class TimeSheetRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted ",
+            screen_name='TimeSheet',
+        )
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -1142,6 +1397,13 @@ class UserProfileListCreateView(APIView):
         serializer = UserProfileSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Created User profile: {serializer.data.get('user', '')}",
+        screen_name='User profile',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         print(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -1166,6 +1428,13 @@ class UserProfileRetrieveUpdateDestroyView(APIView):
             serializer = UserProfileSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated User profile: {serializer.data.get('user', '')}",
+        screen_name='User profile',
+    )   
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -1174,6 +1443,12 @@ class UserProfileRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted ",
+            screen_name='UserProfile',
+        )
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -1324,6 +1599,13 @@ class TRIOGroupMemberListCreateView(APIView):
         serializer = TRIOGroupMemberSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=instance.created_by,
+        action=f"Created ",
+        screen_name='Trio Group Member',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1347,6 +1629,13 @@ class TRIOGroupMemberRetrieveUpdateDestroyView(APIView):
             serializer = TRIOGroupMemberSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated ",
+        screen_name='Trio Group Member',
+    )   
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -1355,6 +1644,12 @@ class TRIOGroupMemberRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted ",
+            screen_name='Trio Group Member',
+        )
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -1369,6 +1664,13 @@ class TRIOProfileListCreateView(APIView):
         serializer = TRIOProfileSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Created Trio profile: {serializer.data.get('user', '')}",
+        screen_name='Trio profile',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -1394,6 +1696,13 @@ class TRIOProfileRetrieveUpdateDestroyView(APIView):
             print(request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated Trio profile: {serializer.data.get('user', '')}",
+        screen_name='Trio profile',
+    )   
                 return Response(serializer.data)
             print(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -1403,6 +1712,12 @@ class TRIOProfileRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted ",
+            screen_name='Trio Profile',
+        )
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -1472,6 +1787,13 @@ class TaskListCreateView(APIView):
         serializer = TaskSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Created Task",
+        screen_name='Task',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1495,6 +1817,13 @@ class TaskRetrieveUpdateDestroyView(APIView):
             serializer = TaskSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated Task",
+        screen_name='Task',
+    )   
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -1503,6 +1832,12 @@ class TaskRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted ",
+            screen_name='Task',
+        )
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -1608,7 +1943,7 @@ class TaskTimesheetListCreateView(APIView):
             profile=TRIOProfile.objects.get(user=user.id)
             print('-----profile---',profile)
 
-            records = TaskTimesheet.objects.filter(branch=request.user.branch.id,employee=profile.id)
+            records = TaskTimesheet.objects.filter(branch=request.user.branch.id,employee=profile.id,status='pending')
             serializer = TaskTimesheetSerializer(records, many=True)
             return Response(serializer.data)
 
@@ -1616,6 +1951,13 @@ class TaskTimesheetListCreateView(APIView):
         serializer = TaskTimesheetSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Created Task Timesheet",
+        screen_name='Task Timesheet',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1639,6 +1981,13 @@ class TaskTimesheetRetrieveUpdateDestroyView(APIView):
             serializer = TaskTimesheetSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated Task Timesheet",
+        screen_name='Task Timesheet',
+    )   
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -1647,6 +1996,12 @@ class TaskTimesheetRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted ",
+            screen_name='Task Timesheet',
+        )
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -1657,6 +2012,13 @@ class TaskTimesheetApprovalRetrieveUpdateDestroyView(APIView):
         serializer = TaskTimesheetSerializer(records, many=True)
         return Response(serializer.data)
 
+class TimesheetEntryApprovalRetrieveUpdateDestroyView(APIView):
+    def get(self, request):
+        print('--',request.data)
+        records = TimesheetEntry.objects.filter(status='completed')
+        print('---rec',records)
+        serializer = TimesheetEntrySerializer(records, many=True)
+        return Response(serializer.data)
 
 class TimesheetEntryListCreateView(APIView):
     def get(self, request):
@@ -1698,14 +2060,24 @@ class TimesheetEntryListCreateView(APIView):
         timesheet.hours_spent +=  new_hours
         timesheet.total_working_hours-=new_hours
         # If fully used, mark completed
-        # if timesheet.hours_spent == timesheet.total_working_hours:
-        #     timesheet.status = 'completed'
+        if timesheet.total_working_hours==0:
+            timesheet.status = 'completed'
+        else:
+            timesheet.status = 'pending'
+
         timesheet.save()
 
         # Save the entry
         serializer = TimesheetEntrySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user=instance.created_by,
+        action=f"Created Timesheet Entry",
+        screen_name='Timesheet Entry',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1768,6 +2140,12 @@ class TimesheetEntryRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+        user=records.updated_by,
+            action=f"Deleted ",
+            screen_name='Timesheet Entry',
+        )
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -2003,6 +2381,13 @@ class AuditorProfileListCreateView(APIView):
         serializer = AuditorProfileSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Created Auditor profile: {serializer.data.get('user', '')}",
+        screen_name='Auditor profile',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -2027,6 +2412,13 @@ class AuditorProfileRetrieveUpdateDestroyView(APIView):
             serializer = AuditorProfileSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated Auditor profile: {serializer.data.get('user', '')}",
+        screen_name='Auditor profile',
+    )   
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -2035,6 +2427,12 @@ class AuditorProfileRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted ",
+            screen_name='Auditor Profile',
+        )
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -2048,6 +2446,13 @@ class MarketingAgentProfileListCreateView(APIView):
         serializer = MarketingAgentProfileSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Created Agent profile: {serializer.data.get('user', '')}",
+        screen_name='Agent profile',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -2071,6 +2476,13 @@ class MarketingAgentProfileRetrieveUpdateDestroyView(APIView):
             serializer = MarketingAgentProfileSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated Agent profile: {serializer.data.get('user', '')}",
+        screen_name='Agent profile',
+    )   
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -2079,6 +2491,12 @@ class MarketingAgentProfileRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted ",
+            screen_name='Agent',
+        )
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -2183,6 +2601,13 @@ class LawyerProfileListCreateView(APIView):
         print('--',serializer.is_valid())
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Created Lawyer profile: {serializer.data.get('user', '')}",
+        screen_name='Lawyer profile',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -2208,6 +2633,13 @@ class LawyerProfileRetrieveUpdateDestroyView(APIView):
             serializer = LawyerProfileSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated Lawyer profile: {serializer.data.get('user', '')}",
+        screen_name='Lawyer profile',
+    )   
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -2216,6 +2648,12 @@ class LawyerProfileRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted ",
+            screen_name='Lawyer Profile',
+        )
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -2367,6 +2805,13 @@ class TaskAssignmentListCreateView(APIView):
         serializer = TaskAssignmentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Created ",
+        screen_name='Task Assignment',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -2390,6 +2835,13 @@ class TaskAssignmentRetrieveUpdateDestroyView(APIView):
             serializer = TaskAssignmentSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated ",
+        screen_name='Task Assignment',
+    )   
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -2398,6 +2850,12 @@ class TaskAssignmentRetrieveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted ",
+            screen_name='Task Assignment',
+        )
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -2412,6 +2870,13 @@ class TemplateListCreateView(APIView):
         serializer = TemplateSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Created ",
+        screen_name='Template',
+    )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
   
@@ -2436,6 +2901,13 @@ class TemplateRetriveUpdateDestroyView(APIView):
             serializer = TemplateSerializer(records, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                instance = serializer.instance
+                audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f"Updated ",
+        screen_name='Template',
+    )   
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -2444,6 +2916,12 @@ class TemplateRetriveUpdateDestroyView(APIView):
         records = self.get_object(pk)
         if records:
             records.delete()
+            audit_log = AuditLog.objects.create(
+            branch=records.branch,
+            user_id=request.user.pk,
+            action=f"Deleted ",
+            screen_name='Template',
+        )
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -2753,5 +3231,48 @@ class CaseDocument(APIView):
             serializer=LoanCaseSerializer(records,many=True)
             print('serializer',serializer)
             return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+        
+
+class TimeSheetEntryView(APIView):
+    def get(self,request,pk):
+        try:
+        # timesheet=TaskTimesheet.objects.get(pk=pk)
+            entry=TimesheetEntry.objects.filter(timesheet=pk)
+            serializer=TimesheetEntrySerializer(entry,many=True).data
+            return Response(serializer,status=200)
+        
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class TimeSheetEntryView1(APIView):
+    def get(self,request,pk):
+        try:
+        # timesheet=TaskTimesheet.objects.get(pk=pk)
+            entry=TimesheetEntry.objects.get(pk=pk)
+            serializer=TimesheetEntrySerializer(entry).data
+            return Response(serializer,status=200)
+        
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class customer_Screen(APIView):
+    def get(self,request,pk):
+        try:
+            print('pp',pk)
+            user_info=UserProfile.objects.get(user=pk)
+            print('--',user_info)
+            client_profile=ClientProfile.objects.get(user=user_info.id)
+            print('---',client_profile)
+            case_details=LoanCase.objects.get(client=client_profile.id)
+            print('--',case_details)
+            return Response({
+                    'case': LoanCaseSerializer(case_details).data,
+                    'user': UserProfileSerializer(user_info).data,
+                    'client':ClientProfileSerializer(client_profile).data,
+                })        
         except Exception as e:
             return Response({"error": str(e)}, status=500)

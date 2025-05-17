@@ -453,7 +453,7 @@ class FinalReport(models.Model):
 
 class TaskAuditLog(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
-	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='audit_logs')
+	task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='audit_logs',null=True, blank=True, )
 	message = models.TextField() 
 	created_by = models.ForeignKey('user_management.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='task_audit_created_by')
 	created_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
@@ -478,14 +478,16 @@ class RiskAssessment(models.Model):
 #  NMSE Report & Approval
 #  Compliance & Audit Trail
 class AuditLog(models.Model):
-	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
+	branch = models.ForeignKey('user_management.Branch', on_delete=models.CASCADE, null=True, blank=True)
 	user = models.ForeignKey('user_management.User', on_delete=models.SET_NULL, null=True)
 	action = models.CharField(max_length=255)
 	timestamp = models.DateTimeField(auto_now_add=True)
-	case = models.ForeignKey(LoanCase, on_delete=models.CASCADE, null=True, blank=True)
-	meta = models.JSONField(blank=True, null=True)
+	screen_name = models.CharField(max_length=50,blank=True, null=True ,)
+
+	# case = models.ForeignKey(LoanCase, on_delete=models.CASCADE, null=True, blank=True)
+	# meta = models.JSONField(blank=True, null=True)
 	def __str__(self):
-		return self.user
+		return f"{self.user} - {self.action} on {self.screen_name or 'N/A'} at {self.timestamp}"		
 
 # LoanCase, RiskAssessment, Task, TimesheetEntry, ClientQuery
 #  Notifications & Feedback
@@ -572,7 +574,7 @@ class TimesheetEntry(models.Model):
 	document = models.FileField(upload_to="timesheet_documents/", validators=[FileExtensionValidator(allowed_extensions=["pdf", "doc", "docx"])], blank=True, null=True)
 	filename = models.CharField(max_length=255, blank=True, null=True) 
 	file_type = models.CharField(max_length=255, blank=True, null=True)  
-	attachment = models.FileField(upload_to="timesheet_attachemnts/", validators=[FileExtensionValidator(allowed_extensions=["pdf", "doc", "docx"])], blank=True, null=True)
+	attachment = models.FileField(upload_to="timesheet_attachments/", validators=[FileExtensionValidator(allowed_extensions=["pdf", "doc", "docx"])], blank=True, null=True)
 	attachment_name = models.CharField(max_length=255, blank=True, null=True)  
 	attachment_type = models.CharField(max_length=255, blank=True, null=True)
 	# is_late_hours = models.BooleanField(default=False,blank=True, null=True)
@@ -582,8 +584,9 @@ class TimesheetEntry(models.Model):
 	status = models.CharField(max_length=50,choices=[('Pending', 'Pending'),('Completed', 'Completed'),('Approved', 'Approved'),('Rejected', 'Rejected')],default='Pending',null=True,blank=True)
 	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
 	created_at = models.DateTimeField(auto_now_add=True,null=True, blank=True)
+	reason=models.CharField(max_length=250,null=True)
 	def __str__(self):
-		return self.id
+	    return f"TimesheetEntry #{self.id}"
 	
 class TimesheetDocument(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
