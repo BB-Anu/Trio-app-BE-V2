@@ -344,11 +344,22 @@ class TaskTimesheetSerializer(serializers.ModelSerializer):
         else:
             rep["employee"] = None
         return rep
+    
+
 class TimesheetEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = TimesheetEntry
         fields = "__all__"
-
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if instance.timesheet.id :
+            rep["timesheet"] = {
+                'id': str(instance.timesheet.id),
+                'name': instance.timesheet.case.case
+            }
+        else:
+            rep["employee"] = None
+        return rep
 class TimesheetAttachmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimesheetAttachment

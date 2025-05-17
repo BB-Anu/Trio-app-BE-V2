@@ -4,6 +4,7 @@ from .models import *
 admin.site.register(UserTypeMaster)
 admin.site.register(Events)
 admin.site.register(TaskAssignment)
+admin.site.register(Task)
 admin.site.register(TaskTemplate)
 admin.site.register(ClientProfile)
 admin.site.register(TRIOProfile)
