@@ -78,7 +78,10 @@ class LoanCaseSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         try:
-            rep["client"] = instance.client.user.user.first_name
+            rep["client"] = {
+                 "id":instance.client.user.user.id,
+                 "name":instance.client.user.user.first_name
+            }
         except AttributeError:
             rep["client"] = None
         return rep
@@ -157,7 +160,10 @@ class DocumentSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         try:
-            rep["case"] = instance.case.case
+            rep["case"] = {
+                    'id': instance.case.id,
+                    'name': instance.case.case
+                        }
         except AttributeError:
             rep["case"] = None
         try:
@@ -187,6 +193,10 @@ class DocumentUploadSerializer(serializers.ModelSerializer):
         fields = "__all__"
     
 
+class RequestDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=RequestDocument
+        fields="__all__"
 
 class DocumentUploadAudit1Serializer(serializers.ModelSerializer):
     class Meta:
