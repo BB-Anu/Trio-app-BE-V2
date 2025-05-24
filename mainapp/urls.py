@@ -133,5 +133,8 @@ urlpatterns = [
     path('case_dcoument/',CaseDocument.as_view(),name='case_dcoument'),
     path('timesheetentry_view/<pk>/',TimeSheetEntryView.as_view(),name='timesheetentry_view'),
     path('timesheetentry_view1/<pk>/',TimeSheetEntryView1.as_view(),name='timesheetentry_view1'),
-    path('customer_screen/<pk>/',customer_Screen.as_view(),name='customer_screen')
+    path('customer_screen/<pk>/',customer_Screen.as_view(),name='customer_screen'),
+    
+	   path("request_document/", RequestDocumentListCreateView.as_view(), name="request-document"),
+	   path("requested_documents/", RequestedDocumentListCreateView.as_view(), name="request-document"),
 ]

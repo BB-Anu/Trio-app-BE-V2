@@ -436,7 +436,7 @@ class LoanCaseListCreateView(APIView):
             instance = serializer.instance
             audit_log = AuditLog.objects.create(
         branch = instance.branch ,
-        user_id=instance.created_by,
+        user_id=instance.created_by.id,
         action=f"Created Loancase: {serializer.data.get('case', '')}",
         screen_name='Loan Case',
     )   
@@ -868,8 +868,8 @@ class DocumentApproveListCreateView(APIView):
     def put(self, request, pk):
         try:
             print('====',pk)
-            doc = Document.objects.get(pk=pk)
-            print('===',doc)
+            doc = get_object_or_404(Document,pk=pk)
+            print('===',doc.id)
             doc.status = 'approved'
             doc.reject_reason=''
             doc.save()
@@ -884,7 +884,7 @@ class DocumentRejectListCreateView(APIView):
         try:
             print('==pk==',pk)
             doc = Document.objects.get(pk=pk)
-            print('===',doc)
+            print('===',doc.id)
             doc.status = 'rejected'
             doc.reject_reason=reject_reason
             doc.save()
@@ -3276,3 +3276,52 @@ class customer_Screen(APIView):
                 })        
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+
+class RequestDocumentListCreateView(APIView):
+    def get(self, request):
+        print(request.data)
+        if request.user.is_superuser:
+            records = RequestDocument.objects.filter(branch=request.user.branch.id)
+            serializer =  RequestDocumentSerializer(records, many=True)
+            return Response(serializer.data)
+        else:
+            records =  RequestDocument.objects.filter(branch=request.user.branch.id)
+            serializer =  RequestDocumentSerializer(records, many=True)
+            return Response(serializer.data)
+
+    def post(self, request):
+        print('request',request.data)
+        data = request.data.copy() 
+        user_id = data.get('requested_to')
+        client_profile = get_object_or_404(ClientProfile, user__user_id=user_id)
+        data['requested_to'] = client_profile.id
+        print('----data',data)
+        serializer = RequestDocumentSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            instance = serializer.instance
+            audit_log = AuditLog.objects.create(
+        branch = instance.branch ,
+        user_id=request.user.pk,
+        action=f" Requested Document",
+        screen_name=' RequestDocument',
+        )   
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        print('-------',serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RequestedDocumentListCreateView(APIView):
+    def get(self, request):
+        try:
+            print('request',request.user.id)
+            client_profile = get_object_or_404(ClientProfile, user__user_id=request.user.id)
+            records = RequestDocument.objects.get(branch=request.user.branch.id, requested_to=client_profile)
+            serializer = RequestDocumentSerializer(records)
+            print('serializer',serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except RequestDocument.DoesNotExist:
+            return Response({'detail': 'Requested document not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print('Error occurred:', str(e))
+            return Response({'detail': 'An unexpected error occurred.'}, status=status.HTTP_400_BAD_REQUEST)

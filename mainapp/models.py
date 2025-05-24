@@ -189,7 +189,7 @@ class Document(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
 	case = models.ForeignKey(LoanCase, on_delete=models.CASCADE)
 	uploaded_by = models.ForeignKey('user_management.User', on_delete=models.SET_NULL, null=True)
-	document_type = models.CharField(max_length=250,)
+	document_type = models.ForeignKey('DocumentType', on_delete=models.CASCADE, null=True)
 	file = models.FileField(upload_to="documents/", validators=[FileExtensionValidator(allowed_extensions=["pdf", "doc", "docx"])],null=True, blank=True )
 	version = models.IntegerField()
 	uploaded_at = models.DateTimeField(auto_now_add=True)
@@ -197,6 +197,20 @@ class Document(models.Model):
 	reject_reason= models.CharField(max_length=250,null=True,blank=True)
 	def __str__(self):
 		return self.document_type
+
+
+class RequestDocument(models.Model):
+	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
+	case = models.ForeignKey(LoanCase, on_delete=models.CASCADE)
+	requested_by = models.ForeignKey('user_management.User', on_delete=models.SET_NULL, null=True, related_name='%(class)s_requested_by')
+	requested_to = models.ForeignKey(ClientProfile, on_delete=models.SET_NULL, null=True, related_name='%(class)s_requested_to')
+	document_type = models.ManyToManyField('DocumentType')
+	requested_at = models.DateTimeField(auto_now_add=True)
+	status=models.CharField(max_length=10,choices=[('requested','requested'),('uploaded','uploaded'),('approved','approved'),('rejected','rejected')],default='requested')
+	reject_reason= models.CharField(max_length=250,null=True,blank=True)
+
+
+
 
 class ComplianceChecklist(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
