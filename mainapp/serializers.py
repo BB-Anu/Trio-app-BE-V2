@@ -95,7 +95,8 @@ class ProjectsSerializer(serializers.ModelSerializer):
 class DocumentTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentType
-        fields = "__all__"
+        fields = ['id', 'type']
+
 
 class FolderMasterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -170,6 +171,10 @@ class DocumentSerializer(serializers.ModelSerializer):
             rep["uploaded_by"] = instance.uploaded_by.first_name
         except AttributeError:
             rep["uploaded_by"] = None
+        try:
+            rep["document_type"] = instance.document_type.type
+        except AttributeError:
+            rep["document_type"] = None
         return rep
     
 class RiskAssessmentSerializer(serializers.ModelSerializer):
@@ -193,10 +198,53 @@ class DocumentUploadSerializer(serializers.ModelSerializer):
         fields = "__all__"
     
 
+# class RequestDocumentSerializer(serializers.ModelSerializer):
+#     document_type = DocumentTypeSerializer(many=True, read_only=True)
+
+#     class Meta:
+#         model = RequestDocument
+#         fields = '__all__'
+
+#     def to_representation(self, instance):
+#         rep = super().to_representation(instance)
+
+#         rep["requested_by"] = getattr(instance.requested_by, "first_name", None)
+
+#         if instance.document_type.exists():
+#             rep["document_type"] = ", ".join([dt.type for dt in instance.document_type.all()])
+#         else:
+#             rep["document_type"] = []
+#         rep["case"] = {
+#             "id": instance.case.id,
+#             "name": instance.case.case
+#         } if instance.case else None
+
+#         return rep
+
 class RequestDocumentSerializer(serializers.ModelSerializer):
     class Meta:
-        model=RequestDocument
-        fields="__all__"
+        model = RequestDocument
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+
+        rep["requested_by"] = getattr(instance.requested_by, "first_name", None)
+
+        # Fix: use .all() before calling .exists() or iterating
+        document_types = instance.document_type.all()
+        if document_types.exists():
+            rep["document_type"] = ", ".join([dt.type for dt in document_types])
+        else:
+            rep["document_type"] = ""
+
+        rep["case"] = {
+            "id": instance.case.id,
+            "name": instance.case.case
+        } if instance.case else None
+
+        return rep
+   
 
 class DocumentUploadAudit1Serializer(serializers.ModelSerializer):
     class Meta:

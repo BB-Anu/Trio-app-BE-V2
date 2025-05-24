@@ -42,7 +42,10 @@ class UserProfile(models.Model):
 	email = models.EmailField()
 	profile_completed = models.BooleanField()
 	status = models.CharField(max_length=250,choices=[ ('pending', 'pending'), ('Completed', 'Completed')],default='pending')
-
+	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
+	created_at = models.DateTimeField(auto_now=True) 
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
 
 
 class ClientProfile(models.Model):
@@ -66,7 +69,10 @@ class ClientProfile(models.Model):
 	annual_turnover = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
 	enterprise_size = models.CharField(max_length=10, choices=ENTERPRISE_SIZE_CHOICES, null=True, blank=True)
 	has_existing_loan = models.BooleanField(default=False)
-
+	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
+	created_at = models.DateTimeField(auto_now=True) 
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
 	def save(self, *args, **kwargs):
 		if self.number_of_employees is not None:
 			if self.number_of_employees <= 10:
@@ -95,6 +101,10 @@ class AuditorProfile(models.Model):
 	is_internal = models.BooleanField()
 	nda_signed = models.BooleanField()
 	active = models.BooleanField()
+	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
+	created_at = models.DateTimeField(auto_now=True) 
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
 	def __str__(self):
 		return self.firm_name
 
@@ -110,6 +120,10 @@ class MarketingAgentProfile(models.Model):
 	address = models.TextField()
 	# has_ndasigned = models.BooleanField()
 	available_for_assignment = models.BooleanField()
+	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
+	created_at = models.DateTimeField(auto_now=True) 
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
 	def __str__(self):
 		return self.agency_name
 
@@ -127,6 +141,11 @@ class LawyerProfile(models.Model):
 	licensed = models.BooleanField()
 	nda_signed = models.BooleanField()
 	active = models.BooleanField()
+	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
+	created_at = models.DateTimeField(auto_now=True) 
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
+
 	def __str__(self):
 		return self.law_firm
 
@@ -139,6 +158,10 @@ class TRIOProfile(models.Model):
 	experience_years = models.IntegerField()
 	phone = models.IntegerField()
 	is_active = models.BooleanField()
+	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
+	created_at = models.DateTimeField(auto_now=True) 
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
 	
 class Members(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
@@ -162,6 +185,9 @@ class LoanCase(models.Model):
 	start_date = models.DateTimeField(null=True,blank=True)
 	status = models.CharField(max_length=40, choices=[ ('new', 'New'),('info_gathering', 'Information Gathering'), ('in_progress', 'Under Analysis'), ('review', 'Under Review'),('rework', 'Rework'), ('approved', 'Approved'), ('declined', 'Declined'),  ('closed', 'Closed'),    ], default='new')
 	reject_reason=models.CharField(max_length=250,null=True,blank=True)
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
+
 	def save(self, *args, **kwargs):
 		if not self.case_id:
 			last_id = LoanCase.objects.aggregate(models.Max('id'))['id__max'] or 0
@@ -181,6 +207,7 @@ class CaseAssignment(models.Model):
 	assigned_at = models.DateField(auto_now=True)
 	due_date = models.DateField()
 	status = models.CharField(max_length=250,choices=[ ('pending', 'pending'), ('Completed', 'Completed')],default='pending')
+	
 	def __str__(self):
 		return f"Case: {self.case}, Assigned To: {[user.id for user in self.assigned_to.all()]}"
 	
@@ -195,6 +222,11 @@ class Document(models.Model):
 	uploaded_at = models.DateTimeField(auto_now_add=True)
 	status=models.CharField(max_length=10,choices=[('pending','pending'),('approved','approved'),('rejected','rejected')],default='pending')
 	reject_reason= models.CharField(max_length=250,null=True,blank=True)
+	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
+	created_at = models.DateTimeField(auto_now=True) 
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
+
 	def __str__(self):
 		return self.document_type
 
@@ -208,6 +240,10 @@ class RequestDocument(models.Model):
 	requested_at = models.DateTimeField(auto_now_add=True)
 	status=models.CharField(max_length=10,choices=[('requested','requested'),('uploaded','uploaded'),('approved','approved'),('rejected','rejected')],default='requested')
 	reject_reason= models.CharField(max_length=250,null=True,blank=True)
+	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
+	created_at = models.DateTimeField(auto_now=True) 
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
 
 
 
@@ -231,6 +267,11 @@ class CustomDocumentEntity(models.Model):
 	entity_type = models.CharField(max_length=250,)
 	client = models.ForeignKey(ClientProfile, on_delete=models.CASCADE, blank=True, null=True,related_name='%(class)s_client')
 	description = models.TextField(blank=True, null=True,)
+	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
+	created_at = models.DateTimeField(auto_now=True) 
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
+
 	def __str__(self):
 		return self.entity_id
 	
@@ -246,7 +287,7 @@ class FolderMaster(models.Model):
 	parent_folder=models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='FolderMasters')
 	default_folder=models.BooleanField(default=False)
 	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE,related_name="FolderMastere1_created_by",blank=True,null=True)
-	created_at = models.DateTimeField(auto_now_add=True)
+	created_at = models.DateTimeField(auto_now=True)
 	update_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True,related_name="FolderMastere1_update_by")
 	update_at = models.DateTimeField(auto_now=True)
 	def __str__(self):
@@ -257,7 +298,7 @@ class DocumentGroup(models.Model):
 	group_name = models.CharField(max_length=255,unique=False ,)
 	description=models.CharField(max_length=255,null=True)
 	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
-	created_at = models.DateTimeField(auto_now_add=True) 
+	created_at = models.DateTimeField(auto_now=True) 
 	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
 	updated_at = models.DateTimeField(auto_now=True)  
 	def __str__(self):
@@ -269,7 +310,7 @@ class DocumentType(models.Model):
 	description = models.CharField(max_length=255,unique=False ,)
 	# group= models.ForeignKey(DocumentGroup, on_delete=models.CASCADE, related_name='%(class)s_group')
 	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
-	created_at = models.DateTimeField(auto_now_add=True) 
+	created_at = models.DateTimeField(auto_now=True) 
 	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
 	updated_at = models.DateTimeField(auto_now=True)  
 	def __str__(self):
@@ -290,7 +331,7 @@ class DocumentUpload(models.Model):
 	start_date=models.DateField(blank=True,null=True)
 	end_date=models.DateField(blank=True,null=True)
 	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE,related_name="DocumentUpload1_created_by" , blank=True, null=True)
-	created_at = models.DateTimeField(auto_now_add=True)
+	created_at = models.DateTimeField(auto_now=True)
 	update_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True,related_name="DocumentUpload1_update_by")
 	update_at = models.DateTimeField(auto_now=True)
 
@@ -371,6 +412,11 @@ class TaskTemplate(models.Model):
 	hours_allocated = models.FloatField()
 	checklist = models.TextField()
 	deliverables = models.TextField()
+	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
+	created_at = models.DateTimeField(auto_now=True) 
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
+
 	def __str__(self):
 		return self.title
 
@@ -388,6 +434,9 @@ class TRIOGroup(models.Model):
 	description = models.TextField(blank=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 	is_available=models.BooleanField(default=True)
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
+
 	def __str__(self):
 		return self.name
 
@@ -395,6 +444,11 @@ class TRIOGroupMember(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
 	group = models.ForeignKey(TRIOGroup, on_delete=models.CASCADE)
 	profile = models.ManyToManyField(UserProfile, blank=True)
+	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
+	created_at = models.DateTimeField(auto_now=True) 
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
+
 	def __str__(self):
 		return self.group
 
@@ -404,13 +458,18 @@ class TRIOAssignment(models.Model):
 	case = models.ForeignKey(LoanCase, on_delete=models.CASCADE,blank=True,null=True,related_name='%(class)s_case')
 	group = models.ForeignKey(TRIOGroup, on_delete=models.CASCADE)
 	assigned_by = models.ForeignKey('user_management.User', on_delete=models.SET_NULL, null=True,related_name='assign_by')
-	assigned_to = models.ManyToManyField('user_management.User',related_name='assign_to')
+	assigned_to = models.ManyToManyField('user_management.User',related_name='assigned_to')
 	assigned_on = models.DateTimeField(auto_now_add=True)
 	status = models.CharField(max_length=20, choices=[
 		('pending', 'Pending'),
 		('in_progress', 'In Progress'),
 		('completed', 'Completed')
 	], default='pending')
+	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
+	created_at = models.DateTimeField(auto_now=True) 
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
+
 	def __str__(self):
 		return f'{self.case}-{self.group}'
 
@@ -428,6 +487,11 @@ class Task(models.Model):
 		('in_progress', 'In Progress'),
 		('completed', 'Completed')
 	], default='pending')
+
+	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
+
 	def __str__(self):
 		return f"Task for {self.assignment} (Assigned to {self.assigned_to})"
 
@@ -452,6 +516,10 @@ class TaskTimesheet(models.Model):
 	status=models.CharField(max_length=20,choices=[('pending','pending'),('overdue','overdue'),('completed','completed'),('approved','approved'),('rejected','rejected')],default='pending')
 	reject_reason=models.CharField(max_length=250,null=True,blank=True)
 	created_at=models.DateField(auto_now=True)
+	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
+
 	def __str__(self):
 		return str(self.id) 
 
@@ -551,6 +619,11 @@ class TaskAssignment(models.Model):
 	assigned_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
 	due_date = models.DateField(blank=True, null=True,)
 	notes = models.TextField(blank=True, null=True,)
+	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
+	created_at = models.DateTimeField(auto_now=True) 
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
+
 	def __str__(self):
 		return self.assigned_to
 
@@ -575,6 +648,7 @@ class TimeSheet(models.Model):
 	status = models.CharField(max_length=50,choices=[('Pending', 'Pending'),('Completed', 'Completed'),('Approved', 'Approved'),('Rejected', 'Rejected')],default='Pending',null=True,blank=True)
 	location = models.TextField(blank=True, null=True,)
 	created_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
+
 	def __str__(self):
 		return self.employee
 
@@ -599,6 +673,9 @@ class TimesheetEntry(models.Model):
 	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
 	created_at = models.DateTimeField(auto_now_add=True,null=True, blank=True)
 	reason=models.CharField(max_length=250,null=True)
+	updated_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, blank=True, null=True, related_name="%(class)s_updated_by")  
+	updated_at = models.DateTimeField(auto_now=True)  
+
 	def __str__(self):
 	    return f"TimesheetEntry #{self.id}"
 	
