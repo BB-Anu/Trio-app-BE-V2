@@ -3314,12 +3314,21 @@ class RequestDocumentListCreateView(APIView):
 class RequestedDocumentListCreateView(APIView):
     def get(self, request):
         try:
-            print('request',request.user.id)
-            client_profile = get_object_or_404(ClientProfile, user__user_id=request.user.id)
-            records = RequestDocument.objects.get(branch=request.user.branch.id, requested_to=client_profile)
-            serializer = RequestDocumentSerializer(records)
-            print('serializer',serializer.data)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            if request.user.is_superuser:
+                records = RequestDocument.objects.filter(branch=request.user.branch.id)
+                print('records',records)
+                serializer = RequestDocumentSerializer(records,many=True)
+                print('serializer',serializer.data)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+
+                print('request',request.user.id)
+                client_profile = get_object_or_404(ClientProfile, user__user_id=request.user.id)
+                records = RequestDocument.objects.filter(branch=request.user.branch.id, requested_to=client_profile)
+                print('records',records)
+                serializer = RequestDocumentSerializer(records,many=True)
+                print('serializer',serializer.data)
+                return Response(serializer.data, status=status.HTTP_200_OK)
         except RequestDocument.DoesNotExist:
             return Response({'detail': 'Requested document not found.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:

@@ -105,7 +105,6 @@
         "entities",
         "folder",
         "tasktimesheet_hours",
-        "templates-create",
         "templates-update",
         "company-create",
         "company-update",
@@ -118,8 +117,19 @@
         "ward-create",
         "ward-update",
         "user-create",
-        "client_documents"
-    
-
+        "client_documents",
+        "request_document",
+        "requested_documents",
+        "customer_screen",
+        "timesheetentry_view1",
+        "timesheetentry_view",
+        "case_dcoument",
+        "loancase_report",
+        "timesheets_report",
+        "get_task",
+        "user_dashboard",
+        "tasktimesheet_hours",
+        "requested_documents_list",
+        "request_document_upload"
     ]
 }
