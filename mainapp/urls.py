@@ -64,6 +64,7 @@ urlpatterns = [
 	path("caseassignment/<pk>/", CaseAssignmentRetrieveUpdateDestroyView.as_view(), name="caseassignment-update"),
 	path("triogroupmember/", TRIOGroupMemberListCreateView.as_view(), name="triogroupmember-create"),
 	path("triogroupmember/<pk>/", TRIOGroupMemberRetrieveUpdateDestroyView.as_view(), name="triogroupmember-update"),
+	path("triogroup_member_list/<pk>/", TRIOGroupMemberListRetrieveUpdateDestroyView.as_view(), name="triogroupmember-list"),
 	path("trioprofile/", TRIOProfileListCreateView.as_view(), name="trioprofile-create"),
 	path("trioprofile/<pk>/", TRIOProfileRetrieveUpdateDestroyView.as_view(), name="trioprofile-update"),
 	path("finalreport/", FinalReportListCreateView.as_view(), name="finalreport-create"),
@@ -137,4 +138,5 @@ urlpatterns = [
     
 	   path("request_document/", RequestDocumentListCreateView.as_view(), name="request-document"),
 	   path("requested_documents/", RequestedDocumentListCreateView.as_view(), name="request-document"),
+	   path("trio_requested_documents/", TRIORequestedDocumentListCreateView.as_view(), name="trio-request-document"),
 ]
