@@ -220,7 +220,7 @@ class Document(models.Model):
 	file = models.FileField(upload_to="documents/", validators=[FileExtensionValidator(allowed_extensions=["pdf", "doc", "docx"])],null=True, blank=True )
 	version = models.IntegerField()
 	uploaded_at = models.DateTimeField(auto_now_add=True)
-	status=models.CharField(max_length=10,choices=[('pending','pending'),('approved','approved'),('rejected','rejected')],default='pending')
+	status=models.CharField(max_length=10,choices=[('pending','pending'),('uploaded','uploaded'),('approved','approved'),('rejected','rejected')],default='pending')
 	reject_reason= models.CharField(max_length=250,null=True,blank=True)
 	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
 	created_at = models.DateTimeField(auto_now=True) 
@@ -228,7 +228,7 @@ class Document(models.Model):
 	updated_at = models.DateTimeField(auto_now=True)  
 
 	def __str__(self):
-		return self.document_type
+		return self.status
 
 
 class RequestDocument(models.Model):

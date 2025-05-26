@@ -171,6 +171,7 @@ class DocumentSerializer(serializers.ModelSerializer):
             rep["uploaded_by"] = instance.uploaded_by.first_name
         except AttributeError:
             rep["uploaded_by"] = None
+            
         try:
             rep["document_type"] = instance.document_type.type
         except AttributeError:
@@ -230,6 +231,7 @@ class RequestDocumentSerializer(serializers.ModelSerializer):
         rep = super().to_representation(instance)
 
         rep["requested_by"] = getattr(instance.requested_by, "first_name", None)
+        rep["requested_to"] = getattr(instance.requested_to.user.user, "first_name", None)
 
         # Fix: use .all() before calling .exists() or iterating
         document_types = instance.document_type.all()

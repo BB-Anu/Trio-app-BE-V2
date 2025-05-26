@@ -844,8 +844,15 @@ class DocumentListCreateView(APIView):
             serializer = DocumentSerializer(records, many=True)
             return Response(serializer.data)
         else:
-            records = Document.objects.filter(branch=request.user.branch.id,uploaded_by=request.user)
-            serializer = DocumentSerializer(records, many=True)
+            assignments = TRIOAssignment.objects.filter(assigned_to__id=request.user.id)
+            case_ids = assignments.values_list('case__id', flat=True)
+            print('assignments',case_ids)
+            documents = Document.objects.filter(
+                branch=request.user.branch,
+                case__id__in=case_ids
+            )
+            print('records',documents)
+            serializer = DocumentSerializer(documents, many=True)
             return Response(serializer.data)
 
     def post(self, request):
@@ -853,12 +860,16 @@ class DocumentListCreateView(APIView):
         if serializer.is_valid():
             serializer.save()
             instance = serializer.instance
+            user_id=get_object_or_404(ClientProfile,user__user_id=instance.uploaded_by.id)
+            user=get_object_or_404(RequestDocument,requested_to=user_id,document_type=instance.document_type)
+            user.status="uploaded"
+            user.save()
             audit_log = AuditLog.objects.create(
         branch = instance.branch ,
         user_id=request.user.pk,
         action=f"Created Document",
         screen_name='Document',
-    )   
+            )   
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         print('-------',serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -3334,3 +3345,78 @@ class RequestedDocumentListCreateView(APIView):
         except Exception as e:
             print('Error occurred:', str(e))
             return Response({'detail': 'An unexpected error occurred.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+
+
+class TRIORequestedDocumentListCreateView(APIView):
+    def get(self, request):
+        try:
+            if request.user.is_superuser:
+                records = RequestDocument.objects.filter(branch=request.user.branch.id)
+                print('records',records)
+                serializer = RequestDocumentSerializer(records,many=True)
+                print('serializer',serializer.data)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                records = RequestDocument.objects.filter(branch=request.user.branch.id, requested_by=request.user.id)
+                print('records',records)
+                serializer = RequestDocumentSerializer(records,many=True)
+                print('serializer',serializer.data)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+        except RequestDocument.DoesNotExist:
+            return Response({'detail': 'Requested document not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print('Error occurred:', str(e))
+            return Response({'detail': 'An unexpected error occurred.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TRIOGroupMemberListRetrieveUpdateDestroyView(APIView):
+    def get(self, request, pk):
+        try:
+            print('-- Group ID:', pk)
+            group_members = TRIOGroupMember.objects.get(group=pk)
+            trio_assignment=TRIOAssignment.objects.get(group=pk)
+            print('assignment',trio_assignment.case.id)
+            # Prepare data structure
+            trio_data = []
+
+            # Iterate over the ManyToMany profiles
+            for user_profile in group_members.profile.all():
+                print('user_prof', user_profile)
+                try:
+                    # Get TRIOProfile for this user_profile
+                    trio = TRIOProfile.objects.get(user=user_profile)
+                    print('--- TRIO Profile:', trio)
+
+                    # Get tasks for this TRIOProfile
+                    member_tasks = TaskTimesheet.objects.filter(employee=trio,case=trio_assignment.case.id)
+                    print(f'--- Tasks for {trio.id}:', member_tasks)
+
+                    # Serialize the tasks
+                    tasks_serializer = TaskTimesheetSerializer(member_tasks, many=True)
+
+                    # Append to result
+                    trio_data.append({
+                        "trio_profile_id": trio.id,
+                        "user_profile_id": user_profile.id,
+                        "user_full_name": str(user_profile.user.first_name),  
+                        "tasks": tasks_serializer.data
+                    })
+                except TRIOProfile.DoesNotExist:
+                    print(f'--- No TRIOProfile found for user_profile {user_profile}')
+                    continue
+
+            serializer = TRIOGroupMemberSerializer(group_members)         
+
+            return Response({
+                "group_member": serializer.data,
+                "members_with_tasks": trio_data,
+                "task_count": sum(len(member["tasks"]) for member in trio_data)
+            }, status=status.HTTP_200_OK)
+
+        except TRIOGroupMember.DoesNotExist:
+            return Response({"error": "Group not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
