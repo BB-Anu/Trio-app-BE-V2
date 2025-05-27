@@ -3181,15 +3181,21 @@ class GetTask(APIView):
     def get(self,request,case_id):
         try:
             print('---',case_id)
-            timesheet=TaskTimesheet.objects.get(id=case_id)
-            case=timesheet.case
+            task=Task.objects.get(id=case_id)
+            print('task',task.case.id)
+            # timesheet=TaskTimesheet.objects.fil(case=task.case.id)
+            # print('timesheet',timesheet)
+            # case=timesheet.case
+            # print('case',case)
             user=UserProfile.objects.get(user=request.user)
             trio=TRIOProfile.objects.get(user=user)
-            tasks=TaskTimesheet.objects.filter(case=case,employee=trio)
+            tasks=TaskTimesheet.objects.filter(case=task.case.id,employee=trio)
+            print('tasks',tasks)
             serializer=TaskTimesheetSerializer(tasks,many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+        
         
 class TimesheetsReport(APIView):
     def get(self, request, date=None):
@@ -3393,7 +3399,7 @@ class TRIOGroupMemberListRetrieveUpdateDestroyView(APIView):
                     # Get tasks for this TRIOProfile
                     member_tasks = TaskTimesheet.objects.filter(employee=trio,case=trio_assignment.case.id)
                     print(f'--- Tasks for {trio.id}:', member_tasks)
-
+                
                     # Serialize the tasks
                     tasks_serializer = TaskTimesheetSerializer(member_tasks, many=True)
 

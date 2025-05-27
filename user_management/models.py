@@ -119,6 +119,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    is_superuser = models.BooleanField(default=False)
     maker = models.BooleanField(default=False)
     checker = models.BooleanField(default=False)
     objects = CustomUserManager()
