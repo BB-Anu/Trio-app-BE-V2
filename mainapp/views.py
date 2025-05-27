@@ -896,7 +896,7 @@ class DocumentRejectListCreateView(APIView):
             print('==pk==',pk)
             doc = Document.objects.get(pk=pk)
             print('===',doc.id)
-            doc.status = 'rejected'
+            doc.status = 'returned'
             doc.reject_reason=reject_reason
             doc.save()
             return Response({'message': 'Document approved successfully.'}, status=status.HTTP_200_OK)
