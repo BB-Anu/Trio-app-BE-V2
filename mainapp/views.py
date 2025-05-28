@@ -3132,6 +3132,7 @@ class Dashboard(APIView):
             serialized_assignments = TRIOAssignmentSerializer(assignments, many=True).data
             timesheet=TaskTimesheet.objects.filter(branch=branch_id).count()
             pending_timesheet=TaskTimesheet.objects.filter(branch=branch_id,status='pending').count()
+            completed_timesheet=TaskTimesheet.objects.filter(branch=branch_id,status='completed').count()
             approved_timesheet=TaskTimesheet.objects.filter(branch=branch_id,status='approved').count()
             rejected_timesheet=TaskTimesheet.objects.filter(branch=branch_id,status='rejected').count()
             assignment_count = TRIOAssignment.objects.all().count()
@@ -3145,10 +3146,12 @@ class Dashboard(APIView):
                 'timesheet':timesheet,
                 'pending_timesheet':pending_timesheet,
                 'approved_timesheet':approved_timesheet,
+                'completed_timesheet':completed_timesheet,
                 'rejected_timesheet':rejected_timesheet
             })
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+
 
 class UserDashboard(APIView):
     def get(self,request):
@@ -3238,19 +3241,30 @@ class CaseReport(APIView):
             return Response({"error": str(e)}, status=500)
 
 class CaseDocument(APIView):
-    def get(self,request):
-        try:
-            print('---',request.user)
-            assignment=TRIOAssignment.objects.get(assigned_to=request.user.id)
-            print('assignment',assignment.case.id)
-            records=LoanCase.objects.filter(pk=assignment.case.id)
-            print('records',records)
-            serializer=LoanCaseSerializer(records,many=True)
-            print('serializer',serializer)
-            return Response(serializer.data, status=200)
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
-        
+   def get(self, request):
+    try:
+        print('---', request.user.id)
+
+        # Get assignments for this user
+        assignments = TRIOAssignment.objects.filter(assigned_to=request.user.id)
+        print('assignments', assignments)
+
+        # Get all related case IDs from assignments
+        case_ids = assignments.values_list('case_id', flat=True)
+        print('case_ids', list(case_ids))
+
+        # Fetch the LoanCases using the case_ids
+        records = LoanCase.objects.filter(id__in=case_ids)
+        print('records', records)
+
+        # Serialize the data
+        serializer = LoanCaseSerializer(records, many=True)
+        print('serializer', serializer.data)
+
+        return Response(serializer.data, status=200)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
 
 class TimeSheetEntryView(APIView):
     def get(self,request,pk):
@@ -3399,27 +3413,53 @@ class TRIOGroupMemberListRetrieveUpdateDestroyView(APIView):
                     # Get tasks for this TRIOProfile
                     member_tasks = TaskTimesheet.objects.filter(employee=trio,case=trio_assignment.case.id)
                     print(f'--- Tasks for {trio.id}:', member_tasks)
-                
+                    completed_tasks = TaskTimesheet.objects.filter(case=trio_assignment.case.id,status='completed')
+                    print(f'---completed_tasks  for {trio.id}:', completed_tasks)
+
+                    pending_tasks = TaskTimesheet.objects.filter(case=trio_assignment.case.id,status='pending')
+                    print(f'--- pending_tasks for {trio.id}:', pending_tasks,pending_tasks.count())
+
+                    rejected_tasks = TaskTimesheet.objects.filter(case=trio_assignment.case.id,status='rejected')
+                    print(f'--- rejected_tasks for {trio.id}:', rejected_tasks)
+
+                    approved_tasks = TaskTimesheet.objects.filter(case=trio_assignment.case.id,status='approved')
+                    print(f'--- approved_tasks for {trio.id}:', approved_tasks)
+
                     # Serialize the tasks
                     tasks_serializer = TaskTimesheetSerializer(member_tasks, many=True)
+                    completed_tasks_serializer = TaskTimesheetSerializer(completed_tasks, many=True)
+                    pending_tasks_serializer = TaskTimesheetSerializer(pending_tasks, many=True)
+                    rejected_tasks_serializer = TaskTimesheetSerializer(rejected_tasks, many=True)
+                    approved_tasks_serializer = TaskTimesheetSerializer(approved_tasks, many=True)
 
                     # Append to result
                     trio_data.append({
                         "trio_profile_id": trio.id,
                         "user_profile_id": user_profile.id,
                         "user_full_name": str(user_profile.user.first_name),  
-                        "tasks": tasks_serializer.data
+                        "tasks": tasks_serializer.data,
+                        "completed_tasks":completed_tasks_serializer.data,
+                        "pending_tasks":pending_tasks_serializer.data,
+                        "rejected_tasks":rejected_tasks_serializer.data,
+                        "approved_tasks":approved_tasks_serializer.data,
                     })
+
                 except TRIOProfile.DoesNotExist:
                     print(f'--- No TRIOProfile found for user_profile {user_profile}')
                     continue
 
             serializer = TRIOGroupMemberSerializer(group_members)         
+            print(f'completed_tasks_count: {sum(len(member["completed_tasks"]) for member in trio_data)}')
+            total_pending= pending_tasks.count()
 
             return Response({
                 "group_member": serializer.data,
                 "members_with_tasks": trio_data,
-                "task_count": sum(len(member["tasks"]) for member in trio_data)
+                "task_count": sum(len(member["tasks"]) for member in trio_data),
+                "completed_tasks_count": completed_tasks.count(),
+                "total_pending": total_pending,
+                "rejected_tasks_count": rejected_tasks.count(),
+                "approved_tasks_count": approved_tasks.count(),
             }, status=status.HTTP_200_OK)
 
         except TRIOGroupMember.DoesNotExist:
