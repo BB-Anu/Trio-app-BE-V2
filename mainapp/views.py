@@ -2044,7 +2044,9 @@ class TimesheetEntryListCreateView(APIView):
     #         return Response(serializer.data, status=status.HTTP_201_CREATED)
     #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     def post(self, request):
+        print('--req--',request.data)
         timesheet_id = request.data.get('timesheet')
+        print('timesheetid',timesheet_id)
         new_hours = float(request.data.get('hours', 0))
         print('New hours:', new_hours)
 
@@ -3192,7 +3194,7 @@ class GetTask(APIView):
             # print('case',case)
             user=UserProfile.objects.get(user=request.user)
             trio=TRIOProfile.objects.get(user=user)
-            tasks=TaskTimesheet.objects.filter(case=task.case.id,employee=trio)
+            tasks=TaskTimesheet.objects.filter(case_id=task.case.id,employee=trio)
             print('tasks',tasks)
             serializer=TaskTimesheetSerializer(tasks,many=True)
             return Response(serializer.data, status=200)
