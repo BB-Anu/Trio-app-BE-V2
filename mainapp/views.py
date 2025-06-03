@@ -2,7 +2,7 @@ from datetime import timezone
 from django.shortcuts import render,redirect,get_object_or_404
 from django.views.generic import ListView, UpdateView, CreateView, DetailView
 from django.db.models import Q
-
+from django.db import transaction
 from task.models import *
 from task.serializers import *
 from user_management.models import Role, User
@@ -838,32 +838,118 @@ class ComplianceChecklistRetrieveUpdateDestroyView(APIView):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 class DocumentListCreateView(APIView):
+#     def get(self, request):
+#         print(request.user)
+#         client=get_object_or_404(ClientProfile,user__user_id=request.user.id)
+#         print('client',client)
+#         case_id=get_object_or_404(LoanCase,client=client.id)
+#         print('case_id',case_id)
+#         trio=get_object_or_404(TRIOProfile,user=client.id)
+#         print('trio',trio)
+#         if request.user.is_superuser:
+#             records = Document.objects.filter(branch=request.user.branch.id)
+#             serializer = DocumentSerializer(records, many=True)
+#             return Response(serializer.data)
+#         elif client:
+#             records = Document.objects.filter(branch=request.user.branch.id,case=case_id)
+#             serializer = DocumentSerializer(records, many=True)
+#             return Response(serializer.data)
+
+#         elif trio:
+#             assignments = TRIOAssignment.objects.filter(assigned_to__id=request.user.id)
+#             case_ids = assignments.values_list('case__id', flat=True)
+#             print('assignments',case_ids)
+#             documents = Document.objects.filter(
+#                 branch=request.user.branch,
+#                 case__id__in=case_ids
+#             )
+#             print('records',documents)
+#             serializer = DocumentSerializer(documents, many=True)
+#             return Response(serializer.data)
     def get(self, request):
-        if request.user.is_superuser:
-            records = Document.objects.filter(branch=request.user.branch.id)
+        user = request.user
+        print("User:", user)
+
+        if user.is_superuser:
+            records = Document.objects.filter(branch=user.branch.id)
             serializer = DocumentSerializer(records, many=True)
             return Response(serializer.data)
-        else:
-            assignments = TRIOAssignment.objects.filter(assigned_to__id=request.user.id)
+
+        # Try fetching client
+        client = ClientProfile.objects.filter(user__user_id=user.id).first()
+        if client:
+            print("Client:", client)
+            case = LoanCase.objects.filter(client=client).first()
+            if case:
+                print("Case:", case)
+                records = Document.objects.filter(branch=user.branch.id, case=case)
+                serializer = DocumentSerializer(records, many=True)
+                return Response(serializer.data)
+
+        # Try fetching TRIO
+        trio = TRIOProfile.objects.filter(user__user_id=user).first()
+        if trio:
+            print("TRIO:", trio)
+            assignments = TRIOAssignment.objects.filter(assigned_to=user)
             case_ids = assignments.values_list('case__id', flat=True)
-            print('assignments',case_ids)
-            documents = Document.objects.filter(
-                branch=request.user.branch,
-                case__id__in=case_ids
-            )
-            print('records',documents)
+            documents = Document.objects.filter(branch=user.branch, case__id__in=case_ids)
             serializer = DocumentSerializer(documents, many=True)
             return Response(serializer.data)
 
+        return Response({"detail": "No access or matching profile found."}, status=403)
+
+
+    # def post(self, request):
+    #     serializer = DocumentSerializer(data=request.data)
+    #     print('data',request.data)
+    #     print('valid',serializer.is_valid())
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         instance = serializer.instance
+    #         client=get_object_or_404(ClientProfile,user__user_id=instance.uploaded_by.id)
+    #         print('client',client)
+    #         if client:
+    #             user=get_object_or_404(RequestDocument,requested_to=client.id,document_type=instance.document_type)
+    #             user.status="uploaded"
+    #             user.save()
+    #         trio=get_object_or_404(TRIOProfile,user__user_id=instance.uploaded_by.id)
+    #         print('trio',trio)
+    #         if trio:
+    #             user=get_object_or_404(RequestDocument,requested_to=client.id,document_type=instance.document_type)
+    #             user.status="uploaded"
+    #             user.save()
     def post(self, request):
         serializer = DocumentSerializer(data=request.data)
+        print('data:', request.data)
+        
         if serializer.is_valid():
             serializer.save()
             instance = serializer.instance
-            user_id=get_object_or_404(ClientProfile,user__user_id=instance.uploaded_by.id)
-            user=get_object_or_404(RequestDocument,requested_to=user_id,document_type=instance.document_type)
-            user.status="uploaded"
-            user.save()
+            uploaded_by_id = instance.uploaded_by.id
+
+            # Try getting the client or trio profile
+            client = ClientProfile.objects.filter(user__user_id=uploaded_by_id).first()
+            trio = TRIOProfile.objects.filter(user__user_id=uploaded_by_id).first()
+
+            if client:
+                print('client:', client)
+                req_doc = RequestDocument.objects.filter(
+                    requested_to=client.id,
+                    document_type=instance.document_type
+                ).first()
+                if req_doc:
+                    req_doc.status = "uploaded"
+                    req_doc.save()
+
+            elif trio:
+                print('trio:', trio)
+                req_doc = RequestDocument.objects.filter(
+                    requested_to=trio.id,
+                    document_type=instance.document_type
+                ).first()
+                if req_doc:
+                    req_doc.status = "uploaded"
+                    req_doc.save()
             audit_log = AuditLog.objects.create(
         branch = instance.branch ,
         user_id=request.user.pk,
@@ -1005,30 +1091,64 @@ class TimesheetRejectListCreateView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class LoanCaseApproveListCreateView(APIView):
+#     def put(self, request, pk):
+#         try:
+#             print('====', pk) 
+#             doc = LoanCase.objects.get(pk=pk) 
+#             print('===', doc)
+
+#             doc.status = 'approved'  
+#             doc.reject_reason = ''   
+#             doc.save()               
+            
+#             client = get_object_or_404(ClientProfile,pk=doc.client)
+#             client.has_existing_loan=True
+#             client.save()
+            
+#             assignment = get_object_or_404(TRIOAssignment, case=doc.id)  
+#             print('assignment', assignment.group)
+
+#             group = get_object_or_404(TRIOGroup, pk=assignment.group.id)  
+#             print('group', group)
+
+#             group.is_available = True  
+#             group.save()              
+
+#             return Response({'message': 'LoanCase approved successfully.'}, status=status.HTTP_200_OK)
+#         except LoanCase.DoesNotExist:
+#             return Response({'error': 'LoanCase not found.'}, status=status.HTTP_404_NOT_FOUND)
+#         except Exception as e:
+#             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def put(self, request, pk):
         try:
-            print('====', pk) 
-            doc = LoanCase.objects.get(pk=pk) 
-            print('===', doc)
+            with transaction.atomic():
+                doc = get_object_or_404(LoanCase, pk=pk)
+                print('LoanCase:', doc)
 
-            doc.status = 'approved'  
-            doc.reject_reason = ''   
-            doc.save()               
-            
-            client = get_object_or_404(ClientProfile,pk=doc.client)
-            client.has_existing_loan=True
-            client.save()
-            
-            assignment = get_object_or_404(TRIOAssignment, case=doc.id)  
-            print('assignment', assignment.group)
+                # Update loan case status
+                doc.status = 'approved'
+                doc.reject_reason = ''
+                doc.save()
 
-            group = get_object_or_404(TRIOGroup, pk=assignment.group.id)  
-            print('group', group)
+                # Update client profile
+                client = get_object_or_404(ClientProfile, pk=doc.client_id)
+                client.has_existing_loan = True
+                client.save()
 
-            group.is_available = True  
-            group.save()              
+                # Update group availability via assignment
+                assignment = get_object_or_404(TRIOAssignment, case=doc.id)
+                print('Assignment Group:', assignment.group)
 
-            return Response({'message': 'LoanCase approved successfully.'}, status=status.HTTP_200_OK)
+                if assignment.group:
+                    group = get_object_or_404(TRIOGroup, pk=assignment.group.id)
+                    group.is_available = True
+                    group.save()
+                else:
+                    return Response({'error': 'No group assigned to this case.'}, status=status.HTTP_400_BAD_REQUEST)
+
+                return Response({'message': 'LoanCase approved successfully.'}, status=status.HTTP_200_OK)
+
         except LoanCase.DoesNotExist:
             return Response({'error': 'LoanCase not found.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
