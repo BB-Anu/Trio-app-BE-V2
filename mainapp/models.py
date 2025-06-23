@@ -307,7 +307,7 @@ class DocumentGroup(models.Model):
 class DocumentType(models.Model):
 	branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
 	type = models.CharField(max_length=255,unique=False ,)
-	description = models.CharField(max_length=255,unique=False ,)
+	description = models.CharField(max_length=255,unique=False ,null=True, blank=True)
 	# group= models.ForeignKey(DocumentGroup, on_delete=models.CASCADE, related_name='%(class)s_group')
 	created_by = models.ForeignKey('user_management.User', on_delete=models.CASCADE, related_name="%(class)s_created_by", blank=True, null=True)  
 	created_at = models.DateTimeField(auto_now=True) 

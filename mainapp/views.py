@@ -1904,9 +1904,9 @@ class TaskListCreateView(APIView):
             return Response(serializer.data)    
         else:
             print(request.user)
-            user=UserProfile.objects.get(user=request.user.id)
-            print('---',user.id)
-            profile=TRIOProfile.objects.get(user=user.id)
+            user=UserProfile.objects.get(user=request.user)
+            print('---',user)
+            profile=TRIOProfile.objects.get(user=user)
             print('---',profile.id)
 
             # assigned_to
