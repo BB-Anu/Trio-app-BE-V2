@@ -130,6 +130,8 @@
         "user_dashboard",
         "tasktimesheet_hours",
         "requested_documents_list",
-        "request_document_upload"
+        "request_document_upload",
+        "timesheet_report",
+        "case_report"
     ]
 }

@@ -1,4 +1,6 @@
 from rest_framework import serializers
+
+from user_management.serializers import UserSerializer
 from .models import *
 
 class UserTypeMasterSerializer(serializers.ModelSerializer):
@@ -33,8 +35,10 @@ class ClientProfileSerializer(serializers.ModelSerializer):
                 'id': str(instance.user.user.id),
                 'name': instance.user.user.first_name
             }
+            rep["user_id"]=instance.user.user.id
         else:
             rep["user"] = None
+            rep["user_id"] = None
         return rep
     
 
@@ -115,6 +119,7 @@ class FolderMasterSerializer(serializers.ModelSerializer):
 
         return rep
 class TRIOAssignmentSerializer(serializers.ModelSerializer):
+    assigned_to=UserSerializer(many=True)
     class Meta:
         model = TRIOAssignment
         fields = "__all__"
