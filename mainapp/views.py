@@ -1785,6 +1785,7 @@ class TRIOGroupMemberRetrieveUpdateDestroyView(APIView):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 class TRIOProfileListCreateView(APIView):
+    permission_classes=[IsAuthenticated]
     def get(self, request):
         print(request.data)
         records = TRIOProfile.objects.filter(branch=request.user.branch.id)
