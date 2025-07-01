@@ -427,6 +427,45 @@ class TimesheetEntrySerializer(serializers.ModelSerializer):
         else:
             rep["employee"] = None
         return rep
+
+
+class TimesheetEntryEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TimesheetEntry
+        fields = "__all__"
+   
+
+class TimesheetEntryUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TimesheetEntry
+        fields = '__all__'
+
+    # def update(self, instance, validated_data):
+    #     request = self.context.get('request')
+
+    #     # Check if new files are uploaded:
+    #     new_document = request.FILES.get('document')
+    #     new_attachment = request.FILES.get('attachment')
+
+    #     if new_document:
+    #         instance.document = new_document
+    #     # Else, keep the old one:
+    #     elif 'document' in validated_data:
+    #         validated_data.pop('document')
+
+    #     if new_attachment:
+    #         instance.attachment = new_attachment
+    #     elif 'attachment' in validated_data:
+    #         validated_data.pop('attachment')
+
+    #     # Update other fields:
+    #     for attr, value in validated_data.items():
+    #         setattr(instance, attr, value)
+
+    #     instance.save()
+    #     return instance
+
+
 class TimesheetAttachmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimesheetAttachment
