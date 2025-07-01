@@ -334,8 +334,10 @@ class TRIOProfileSerializer(serializers.ModelSerializer):
                 'id': str(instance.user.user.id),
                 'name': instance.user.user.first_name
             }
+            rep['user_id']=instance.user.user.id
         else:
             rep["user"] = None
+            rep["user_id"] = None
         if instance.task_template:
             rep["task_template"] = {
                 'id': str(instance.task_template.template.Template.id),
@@ -458,8 +460,10 @@ class AuditorProfileSerializer(serializers.ModelSerializer):
         rep = super().to_representation(instance)
         try:
             rep["user"] = instance.user.user.first_name
+            rep["user_id"] = instance.user.user.id
         except AttributeError:
             rep["user"] = None
+            rep["user_id"] = None
         return rep
 class MarketingAgentProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -469,8 +473,10 @@ class MarketingAgentProfileSerializer(serializers.ModelSerializer):
         rep = super().to_representation(instance)
         try:
             rep["user"] = instance.user.user.first_name
+            rep["user_id"] = instance.user.user.id
         except AttributeError:
             rep["user"] = None
+            rep["user_id"] = None
         return rep
 
 class IssueReportSerializer(serializers.ModelSerializer):
@@ -491,8 +497,10 @@ class LawyerProfileSerializer(serializers.ModelSerializer):
         rep = super().to_representation(instance)
         try:
             rep["user"] = instance.user.user.first_name
+            rep["user_id"] = instance.user.user.id
         except AttributeError:
             rep["user"] = None
+            rep["user_id"] = None
         return rep
 
 class MembersSerializer(serializers.ModelSerializer):
