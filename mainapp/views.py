@@ -2226,7 +2226,7 @@ class TimesheetEntryRetrieveUpdateDestroyView(APIView):
     def get(self, request, pk):
         records = self.get_object(pk)
         if records:
-            serializer = TimesheetEntrySerializer(records)
+            serializer = TimesheetEntryEditSerializer(records)
             return Response(serializer.data)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -2240,33 +2240,37 @@ class TimesheetEntryRetrieveUpdateDestroyView(APIView):
     #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     #     return Response(status=status.HTTP_404_NOT_FOUND)
     def put(self, request, pk):
+
+        print('===request.data===',request.data)
         instance = self.get_object(pk)
         if not instance:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         timesheet = instance.timesheet
-        new_hours = float(request.data.get('hours', 0))
+        # new_hours = float(request.data.get('hours', 0))
 
-        total_existing_hours = TimesheetEntry.objects.filter(
-            timesheet=timesheet
-        ).exclude(id=instance.id).aggregate(total=models.Sum('hours'))['total'] or 0
-        remaining_hours = (timesheet.total_working_hours or 0) - total_existing_hours
-    
-        if new_hours > remaining_hours:
-            return Response(
-                {"error": f"Only {remaining_hours} working hours are remaining for this timesheet."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # total_existing_hours = TimesheetEntry.objects.filter(
+        #     timesheet=timesheet
+        # ).exclude(id=instance.id).aggregate(total=models.Sum('hours'))['total'] or 0
+        # remaining_hours = (timesheet.total_working_hours or 0) - total_existing_hours
+        # print('==remaining_hours==',remaining_hours)
+        # if new_hours > remaining_hours:
+        #     print('=new_hours=',new_hours)
+        #     return Response(
+        #         {"error": f"Only {remaining_hours} working hours are remaining for this timesheet."},
+        #         status=status.HTTP_400_BAD_REQUEST
+        #     )
 
-        serializer = TimesheetEntrySerializer(instance, data=request.data)
+        serializer = TimesheetEntryUpdateSerializer(instance, data=request.data)
         if serializer.is_valid():
             serializer.save()
 
             # Update total_working_hours in TimeSheet
-            timesheet.total_working_hours = total_existing_hours - new_hours
-            timesheet.save()
+            # timesheet.total_working_hours = total_existing_hours - new_hours
+            # timesheet.save()
 
             return Response(serializer.data)
+        print('==serializer.errors=',serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
